@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <VersionPrefix>1.0.6</VersionPrefix>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NCoreUtils.Storage.GoogleCloudStorage.Provider\NCoreUtils.Storage.GoogleCloudStorage.Provider.csproj" />
+    <ProjectReference Include="..\NCoreUtils.Storage\NCoreUtils.Storage.csproj" />
+  </ItemGroup>
+</Project>

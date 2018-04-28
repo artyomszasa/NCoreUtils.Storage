@@ -8,6 +8,8 @@ namespace NCoreUtils.Storage
     {
         string Name { get; }
 
+        Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken = default(CancellationToken));
+
         Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

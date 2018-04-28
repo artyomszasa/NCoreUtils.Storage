@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>NCoreutils.Storage</RootNamespace>
+    <VersionPrefix>1.0.4</VersionPrefix>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NCoreUtils.Features.Abstractions" Version="1.0.0" />

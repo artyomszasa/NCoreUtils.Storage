@@ -51,6 +51,21 @@ namespace NCoreUtils.Storage.FileSystem
             }
         }
 
+        public Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            IStorageContainer result;
+            if (LocalPath.Count > 1)
+            {
+                result = new StorageFolder(StorageRoot, LocalPath.SubPath(LocalPath.Count - 1));
+            }
+            else
+            {
+                result = StorageRoot;
+            }
+            return Task.FromResult(result);
+        }
+
         public Task<IStorageRecord> RenameAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();

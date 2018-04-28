@@ -201,7 +201,22 @@ namespace NCoreUtils.Storage.FileSystem
             return builder.ToString();
         }
 
+        public FsPath SubPath(int length)
+        {
+            if (length < 0)
+            {
+                length = Count + length;
+            }
 
+            if (length > Count)
+            {
+                throw new InvalidOperationException($"Trying to get subpath with length = {length} from path with {Count} segments.");
+            }
+            var lastComp = _components[length - 1];
+            var strlen = lastComp.offset + lastComp.length;
+            var newPath = _source.Substring(0, strlen);
+            return FsPath.Parse(newPath);
+        }
         public StringSegment[] ToArray()
         {
             var result = new StringSegment[Count];
