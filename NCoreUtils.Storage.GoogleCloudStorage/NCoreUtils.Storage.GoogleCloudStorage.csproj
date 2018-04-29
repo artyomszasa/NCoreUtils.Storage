@@ -7,4 +7,6 @@
     <ProjectReference Include="..\NCoreUtils.Storage.GoogleCloudStorage.Provider\NCoreUtils.Storage.GoogleCloudStorage.Provider.csproj" />
     <ProjectReference Include="..\NCoreUtils.Storage\NCoreUtils.Storage.csproj" />
   </ItemGroup>
+  <!-- do nothing -->
+  <Target Name="RunCoverageTests" />
 </Project>

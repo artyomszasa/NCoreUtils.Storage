@@ -6,7 +6,7 @@ using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage
 {
-    public interface IStorageContainer
+    public interface IStorageContainer : IStoragePath
     {
         IAsyncEnumerable<IStorageItem> GetContentsAsync();
 

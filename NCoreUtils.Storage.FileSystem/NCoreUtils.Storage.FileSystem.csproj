@@ -13,4 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage\NCoreUtils.Storage.csproj" />
   </ItemGroup>
+  <!-- do nothing -->
+  <Target Name="RunCoverageTests" />
 </Project>

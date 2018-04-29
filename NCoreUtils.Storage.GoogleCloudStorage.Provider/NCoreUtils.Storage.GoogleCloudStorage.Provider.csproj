@@ -14,4 +14,6 @@
     <PackageReference Include="NCoreUtils.Features" Version="1.0.0" />
     <PackageReference Include="NCoreUtils.Linq" Version="1.0.2" />
   </ItemGroup>
+  <!-- do nothing -->
+  <Target Name="RunCoverageTests" />
 </Project>

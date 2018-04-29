@@ -6,4 +6,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage.Abstractions\NCoreUtils.Storage.Abstractions.csproj" />
   </ItemGroup>
+  <!-- do nothing -->
+  <Target Name="RunCoverageTests" />
 </Project>

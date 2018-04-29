@@ -7,7 +7,7 @@ using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage.FileSystem
 {
-    public class StorageRecord : StoragePath, IStorageRecord
+    public class StorageRecord : StorageItem, IStorageRecord
     {
         internal readonly FileInfo _fileInfo;
 
@@ -22,11 +22,10 @@ namespace NCoreUtils.Storage.FileSystem
 
         public string MediaType { get; private set; }
 
-        public string Name => LocalPath.Name;
 
         public Task<Stream> CreateReadableStreamAsync(CancellationToken cancellationToken = default(CancellationToken)) => Task.FromResult<Stream>(_fileInfo.OpenRead());
 
-        public Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public override Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (null != progress)
@@ -36,6 +35,10 @@ namespace NCoreUtils.Storage.FileSystem
             var fullPath = StorageRoot.GetFullPath(this);
             try
             {
+                if (!File.Exists(fullPath))
+                {
+                    throw new FileNotFoundException("Unable to delete file as it does not exist.", fullPath);
+                }
                 File.Delete(fullPath);
                 if (null != progress)
                 {
@@ -49,21 +52,6 @@ namespace NCoreUtils.Storage.FileSystem
                 Logger.LogError("Failed to delete file \"{0}\".", fullPath);
                 return Task.FromException(exn);
             }
-        }
-
-        public Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            IStorageContainer result;
-            if (LocalPath.Count > 1)
-            {
-                result = new StorageFolder(StorageRoot, LocalPath.SubPath(LocalPath.Count - 1));
-            }
-            else
-            {
-                result = StorageRoot;
-            }
-            return Task.FromResult(result);
         }
 
         public Task<IStorageRecord> RenameAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))

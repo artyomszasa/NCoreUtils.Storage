@@ -8,11 +8,11 @@ using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage.FileSystem
 {
-    sealed class StorageFolder : StoragePath, IStorageFolder
+    sealed class StorageFolder : StorageItem, IStorageFolder
     {
         public StorageFolder(StorageRoot storageRoot, FsPath localPath) : base(storageRoot, localPath) { }
 
-        public string Name => LocalPath.Name;
+        
 
         public Task<IStorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => StorageRoot.CreateFolderAsync(LocalPath + name, progress, cancellationToken);
@@ -20,7 +20,7 @@ namespace NCoreUtils.Storage.FileSystem
         public Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => StorageRoot.CreateRecordAsync(LocalPath + name, contents, progress, cancellationToken);
 
-        public Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public override Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (null != progress)
@@ -43,21 +43,6 @@ namespace NCoreUtils.Storage.FileSystem
                 Logger.LogError("Failed to delete folder \"{0}\".", fullPath);
                 return Task.FromException(exn);
             }
-        }
-
-        public Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            IStorageContainer result;
-            if (LocalPath.Count > 1)
-            {
-                result = new StorageFolder(StorageRoot, LocalPath.SubPath(LocalPath.Count - 1));
-            }
-            else
-            {
-                result = StorageRoot;
-            }
-            return Task.FromResult(result);
         }
 
         public IAsyncEnumerable<IStorageItem> GetContentsAsync() => StorageRoot.GetContentsAsync(LocalPath);

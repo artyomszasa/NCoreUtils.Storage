@@ -2,3 +2,5 @@ NCoreUtils*/bin
 NCoreUtils*/obj
 .vscode
 .vs
+NCoreUtils*.Unit*/coverage.xml
+NCoreUtils*.Unit*/report

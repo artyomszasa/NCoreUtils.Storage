@@ -24,7 +24,7 @@ namespace NCoreUtils.Storage.FileSystem
             {
                 RootPath += "/";
             }
-            Uri = new Uri($"file://{RootPath}");
+            Uri = new Uri($"file://{(RootPath == "/" ? RootPath : RootPath.TrimEnd('/'))}");
         }
 
         public override string GetUriPath(FsPath localPath) => RootPath.TrimStart('/') + localPath.Join("/");

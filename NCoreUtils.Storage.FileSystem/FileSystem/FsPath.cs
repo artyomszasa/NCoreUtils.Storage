@@ -207,8 +207,15 @@ namespace NCoreUtils.Storage.FileSystem
             {
                 length = Count + length;
             }
-
-            if (length > Count)
+            if (0 == length)
+            {
+                return FsPath.Empty;
+            }
+            if (Count == length)
+            {
+                return this;
+            }
+            if (length < 0 || length > Count)
             {
                 throw new InvalidOperationException($"Trying to get subpath with length = {length} from path with {Count} segments.");
             }
