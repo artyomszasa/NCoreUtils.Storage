@@ -27,21 +27,6 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         public Task<StorageRecord> CreateRecordAsync(string name, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => StorageRoot.CreateRecordAsync($"{LocalPath}/{name}", contents, progress, cancellationToken);
 
-        public override async Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-            var objects = await client.ListObjectsAsync(StorageRoot.BucketName, LocalPath).ToArray(cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            progress.SetTotal(objects.Length);
-            var deleted = 0;
-            foreach (var obj in objects)
-            {
-                await client.DeleteObjectAsync(obj).ConfigureAwait(false);
-                progress.SetValue(++deleted);
-            }
-        }
-
         public IAsyncEnumerable<StorageItem> GetContentsAsync()
             => DelayedAsyncEnumerable.Delay(cancellationToken => StorageRoot.GetContentsAsync(LocalPath, cancellationToken));
     }

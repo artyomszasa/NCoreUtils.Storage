@@ -12,10 +12,13 @@ namespace NCoreUtils.Storage.FileSystem
     {
         readonly LinuxStorageRoot _linuxStorageRoot;
 
-        public LinuxStorageProvider(IFeatureCollection<IStorageProvider> features, ILogger<LinuxStorageProvider> logger, IContentAnalyzer contentAnalyzer = null)
+        readonly FileSystemStorageOptions _options;
+
+        public LinuxStorageProvider(IFeatureCollection<IStorageProvider> features, ILogger<LinuxStorageProvider> logger, IContentAnalyzer contentAnalyzer = null, FileSystemStorageOptions options = null)
             : base(features, logger, contentAnalyzer)
         {
-            _linuxStorageRoot = new LinuxStorageRoot(this);
+            _options = options ?? new FileSystemStorageOptions { RootPath = "/" };
+            _linuxStorageRoot = new LinuxStorageRoot(this, _options.RootPath);
         }
 
         protected override IEnumerable<StorageRoot> GetFileSystemRoots()
@@ -26,7 +29,7 @@ namespace NCoreUtils.Storage.FileSystem
         protected internal override async Task<StoragePath> ResolvePathAsync(string absolutePath, CancellationToken cancellationToken)
         {
             var path = absolutePath.Trim('/');
-            var fsPath = "/" + path;
+            var fsPath = _linuxStorageRoot.RootPath + path;
             var localPath = FsPath.Parse(path);
             if (Directory.Exists(fsPath))
             {

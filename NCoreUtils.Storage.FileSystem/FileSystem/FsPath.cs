@@ -58,9 +58,9 @@ namespace NCoreUtils.Storage.FileSystem
 
         public static FsPath Empty { get; } = new FsPath(string.Empty, ImmutableArray<(int, int)>.Empty);
 
-        public static bool operator==(FsPath a, FsPath b) => null == a ? null == b : a.Equals(b);
+        public static bool operator==(FsPath a, FsPath b) => object.ReferenceEquals(null, a) ? object.ReferenceEquals(null, b) : a.Equals(b);
 
-        public static bool operator!=(FsPath a, FsPath b) => null == a ? null != b : !a.Equals(b);
+        public static bool operator!=(FsPath a, FsPath b) => object.ReferenceEquals(null, a) ? !object.ReferenceEquals(null, b) : !a.Equals(b);
 
         public static FsPath operator+(FsPath a, string b)
         {
@@ -89,7 +89,7 @@ namespace NCoreUtils.Storage.FileSystem
                     {
                         segments.Add((pos, len - pos));
                     }
-                    pos = len;
+                    pos = len + 1;
                 }
                 else
                 {
@@ -152,7 +152,7 @@ namespace NCoreUtils.Storage.FileSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(FsPath other)
         {
-            if (null == other)
+            if (object.ReferenceEquals(null, other))
             {
                 return false;
             }

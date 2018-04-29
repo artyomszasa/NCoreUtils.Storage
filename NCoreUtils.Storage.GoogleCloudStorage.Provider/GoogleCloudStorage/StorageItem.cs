@@ -11,7 +11,10 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
 
         public StorageItem(StorageRoot storageRoot, string localPath) : base(storageRoot, localPath) { }
 
-        public abstract Task DeleteAsync(IProgress progress, CancellationToken cancellationToken);
+        public virtual Task DeleteAsync(IProgress progress, CancellationToken cancellationToken)
+        {
+            return StorageRoot.DeleteRecursiveAsync(this, progress, cancellationToken);
+        }
 
         public Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken)
         {

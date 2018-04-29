@@ -12,17 +12,28 @@ namespace NCoreUtils.Storage.FileSystem
 {
     public class LinuxStorageRoot : StorageRoot
     {
-        public override Uri Uri { get; } = new Uri("file:///");
+        public string RootPath { get; }
 
-        public LinuxStorageRoot(LinuxStorageProvider storageProvider) : base(storageProvider) { }
+        public override Uri Uri { get; }
 
-        public override string GetUriPath(FsPath localPath) => localPath.Join("/");
+        public LinuxStorageRoot(LinuxStorageProvider storageProvider, string rootPath)
+            : base(storageProvider)
+        {
+            RootPath = rootPath ?? throw new ArgumentNullException(nameof(rootPath));
+            if (!RootPath.EndsWith("/"))
+            {
+                RootPath += "/";
+            }
+            Uri = new Uri($"file://{RootPath}");
+        }
 
-        public override string GetFullPath(FsPath localPath) => "/" + localPath.Join("/");
+        public override string GetUriPath(FsPath localPath) => RootPath.TrimStart('/') + localPath.Join("/");
+
+        public override string GetFullPath(FsPath localPath) => RootPath + localPath.Join("/");
 
         protected override IEnumerable<string> GetFileSystemEntries(FsPath localPath)
         {
-            string path = null == localPath ? "/" : GetFullPath(localPath);
+            string path = null == localPath ? RootPath : GetFullPath(localPath);
             return Directory.EnumerateFileSystemEntries(path);
         }
     }

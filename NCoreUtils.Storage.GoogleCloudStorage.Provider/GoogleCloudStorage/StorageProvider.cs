@@ -14,7 +14,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
 {
     public class StorageProvider : IStorageProvider
     {
-        const string GoogleStorageScheme = "gs";
+        protected const string GoogleStorageScheme = "gs";
 
         public IFeatureCollection Features { get; }
 
@@ -72,7 +72,9 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             return mediaType;
         }
 
-        public IAsyncEnumerable<StorageRoot> GetRootsAsync()
+        public virtual Task<StorageClient> CreateStorageClientAsync() => StorageClient.CreateAsync();
+
+        public virtual IAsyncEnumerable<StorageRoot> GetRootsAsync()
         {
             return DelayedAsyncEnumerable.Delay(async cancellationToken =>
             {
@@ -82,11 +84,11 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             });
         }
 
-        public async Task<StoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<StoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (GoogleStorageScheme == uri.Scheme)
             {
-                var client = await StorageClient.CreateAsync().ConfigureAwait(false);
+                var client = await CreateStorageClientAsync().ConfigureAwait(false);
                 try
                 {
                     var bucket = await client.GetBucketAsync(uri.Host, cancellationToken: cancellationToken).ConfigureAwait(false);

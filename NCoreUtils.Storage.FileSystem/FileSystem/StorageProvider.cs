@@ -21,6 +21,7 @@ namespace NCoreUtils.Storage.FileSystem
         {
             Features = features ?? throw new ArgumentNullException(nameof(features));
             ContentAnalyzer = contentAnalyzer;
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         protected abstract IEnumerable<StorageRoot> GetFileSystemRoots();
