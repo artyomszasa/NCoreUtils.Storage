@@ -11,5 +11,11 @@ namespace NCoreUtils.Storage
 
         public static IServiceCollection AddFileSystemStorageProvider(this IServiceCollection services)
             => _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : throw new NotImplementedException("Windows is not yet supported.");
+
+        public static IServiceCollection AddFileSystemStorageProvider(this IServiceCollection services, string rootPath)
+        {
+            services.AddSingleton(new FileSystemStorageOptions { RootPath = rootPath });
+            return _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : throw new NotImplementedException("Windows is not yet supported.");
+        }
     }
 }
