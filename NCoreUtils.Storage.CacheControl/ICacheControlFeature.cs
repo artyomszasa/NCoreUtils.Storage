@@ -6,6 +6,6 @@ namespace NCoreUtils.Storage
 {
     public interface ICacheControlFeature
     {
-        Task UpdateCacheControlAsync(IStorageItem item, TimeSpan cacheDuration, CancellationToken cancellationToken);
+        Task UpdateCacheControlAsync(IStorageItem item, TimeSpan cacheDuration, bool isPrivate = false, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

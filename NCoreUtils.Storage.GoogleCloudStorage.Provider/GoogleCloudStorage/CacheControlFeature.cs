@@ -8,7 +8,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
 {
     public class CacheControlFeature : ICacheControlFeature
     {
-        public async Task UpdateCacheControlAsync(IStorageItem item, TimeSpan cacheDuration, CancellationToken cancellationToken)
+        public async Task UpdateCacheControlAsync(IStorageItem item, TimeSpan cacheDuration, bool isPrivate, CancellationToken cancellationToken)
         {
             if (item is StorageFolder)
             {
@@ -18,7 +18,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             {
                 var client = await StorageClient.CreateAsync().ConfigureAwait(false);
                 var seconds = (long)Math.Round(cacheDuration.TotalSeconds);
-                record.GoogleObject.CacheControl = seconds == 0 ? "no-cache, no-store, must-revalidate" : $"public, max-age={seconds}";
+                record.GoogleObject.CacheControl = seconds == 0 ? "no-cache, no-store, must-revalidate" : $"{(isPrivate ? "private" : "public")}, max-age={seconds}";
                 await client.UpdateObjectAsync(record.GoogleObject, cancellationToken: cancellationToken);
                 record.StorageRoot.StorageProvider.Logger.LogInformation(
                     "Successfully set cache-control to \"{0}\" on \"{1}\".",

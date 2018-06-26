@@ -2,11 +2,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>NCoreutils.Storage</RootNamespace>
-    <VersionPrefix>1.0.7</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NCoreUtils.Features.Abstractions" Version="1.0.0" />
-    <PackageReference Include="NCoreUtils.Progress.Abstractions" Version="1.0.0" />
+    <PackageReference Include="NCoreUtils.Features.Abstractions" Version="1.1.0" />
+    <PackageReference Include="NCoreUtils.Progress.Abstractions" Version="1.1.0" />
     <PackageReference Include="System.Interactive.Async" Version="3.1.1" />
   </ItemGroup>
   <!-- do nothing -->
