@@ -25,14 +25,14 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         public ILogger Logger { get; }
 
         public StorageProvider(
-            IFeatureCollection<IStorageProvider> features,
             ILogger<StorageProvider> logger,
+            IFeatureCollection<IStorageProvider> features = null,
             IContentAnalyzer contentAnalyzer = null,
             GoogleCloudStorageOptions options = null)
         {
             if (features == null)
             {
-                throw new ArgumentNullException(nameof(features));
+                features = new FeatureCollectionBuilder().Build<IStorageProvider>();
             }
             var googleFeatures = new FeatureCollectionBuilder();
             googleFeatures.AddFeature<ICacheControlFeature>(new CacheControlFeature());
