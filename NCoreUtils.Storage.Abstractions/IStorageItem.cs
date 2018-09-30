@@ -6,10 +6,12 @@ namespace NCoreUtils.Storage
 {
     public interface IStorageItem : IStoragePath
     {
-        string Name { get; }
+        IStorageSecurity Security { get; }
 
         Task<IStorageContainer> GetContainerAsync(CancellationToken cancellationToken = default(CancellationToken));
 
         Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        Task UpdateSecurityAsync(IStorageSecurity security, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

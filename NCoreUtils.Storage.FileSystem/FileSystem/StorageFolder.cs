@@ -12,13 +12,13 @@ namespace NCoreUtils.Storage.FileSystem
     {
         public StorageFolder(StorageRoot storageRoot, FsPath localPath) : base(storageRoot, localPath) { }
 
-        
+
 
         public Task<IStorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => StorageRoot.CreateFolderAsync(LocalPath + name, progress, cancellationToken);
 
-        public Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
-            => StorageRoot.CreateRecordAsync(LocalPath + name, contents, progress, cancellationToken);
+        public Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, string contentType = null, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+            => StorageRoot.CreateRecordAsync(LocalPath + name, contents, contentType, progress, cancellationToken);
 
         public override Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {

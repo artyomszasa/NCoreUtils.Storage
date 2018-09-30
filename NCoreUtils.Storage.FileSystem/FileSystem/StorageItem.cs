@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using NCoreUtils.Progress;
@@ -6,9 +7,14 @@ namespace NCoreUtils.Storage.FileSystem
 {
     public abstract class StorageItem : StoragePath, IStorageItem
     {
-        protected StorageItem(StorageRoot storageRoot, FsPath localPath) : base(storageRoot, localPath) { }
+        public IStorageSecurity Security { get; private set; }
 
-        public string Name => LocalPath.Name;
+        protected StorageItem(StorageRoot storageRoot, FsPath localPath)
+            : base(storageRoot, localPath)
+        {
+            Security = storageRoot.GetSecurity(localPath);
+        }
+
 
         public abstract Task DeleteAsync(IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
 
@@ -25,6 +31,35 @@ namespace NCoreUtils.Storage.FileSystem
                 result = StorageRoot;
             }
             return Task.FromResult(result);
+        }
+
+        public override async Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+            => await GetContainerAsync(cancellationToken);
+
+        public Task UpdateSecurityAsync(IStorageSecurity security, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                if (null != progress)
+                {
+                    progress.Total = 1;
+                    progress.Value = 0;
+                }
+                StorageRoot.SetSecurity(LocalPath, security);
+                Security = security;
+                return Task.CompletedTask;
+            }
+            catch (Exception exn)
+            {
+                return Task.FromException(exn);
+            }
+            finally
+            {
+                if (null != progress)
+                {
+                    progress.Value = 1;
+                }
+            }
         }
     }
 }

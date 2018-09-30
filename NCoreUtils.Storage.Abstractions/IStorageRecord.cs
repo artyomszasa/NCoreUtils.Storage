@@ -13,7 +13,7 @@ namespace NCoreUtils.Storage
 
         Task<Stream> CreateReadableStreamAsync(CancellationToken cancellationToken = default(CancellationToken));
 
-        Task UpdateContentAsync(Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task UpdateContentAsync(Stream contents, string contentType = null, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
 
         Task<IStorageRecord> RenameAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
     }

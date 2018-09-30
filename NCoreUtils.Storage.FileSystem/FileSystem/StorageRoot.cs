@@ -27,10 +27,12 @@ namespace NCoreUtils.Storage.FileSystem
 
         public abstract Uri Uri { get; }
 
+        public abstract string Name { get; }
+
         public StorageRoot(StorageProvider storageProvider)
             => StorageProvider = storageProvider ?? throw new System.ArgumentNullException(nameof(storageProvider));
 
-        internal virtual async Task<IStorageRecord> CreateRecordAsync(FsPath localPath, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        internal virtual async Task<IStorageRecord> CreateRecordAsync(FsPath localPath, Stream contents, string contentType, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var fullPath = GetFullPath(localPath);
@@ -52,7 +54,7 @@ namespace NCoreUtils.Storage.FileSystem
                 Logger.LogError(exn, "Failed to create file \"{0}\".", fullPath);
                 throw;
             }
-            string mediaType = await GetMediaTypeAsync(localPath, cancellationToken).ConfigureAwait(false);
+            string mediaType = contentType ?? await GetMediaTypeAsync(localPath, cancellationToken).ConfigureAwait(false);
             return new StorageRecord(this, localPath, mediaType);
         }
 
@@ -86,6 +88,14 @@ namespace NCoreUtils.Storage.FileSystem
                 .ToAsyncEnumerable()
                 .SelectAsync((path, cancellationToken) => StorageProvider.ResolvePathAsync(path, cancellationToken))
                 .Select(boxed => (IStorageItem)boxed);
+
+        internal abstract StorageSecurity GetSecurity(string absolutePath);
+
+        internal StorageSecurity GetSecurity(FsPath localPath) => GetSecurity(GetFullPath(localPath));
+
+        internal abstract void SetSecurity(string absolutePath, IStorageSecurity security);
+
+        internal void SetSecurity(FsPath localPath, IStorageSecurity security) => SetSecurity(GetFullPath(localPath), security);
 
         /// <summary>
         /// Gets string that can be used as path parameter for <see cref="System.UriBuilder" />.
@@ -179,10 +189,13 @@ namespace NCoreUtils.Storage.FileSystem
 
         public IAsyncEnumerable<IStorageItem> GetContentsAsync() => GetContentsAsync(null);
 
-        public virtual Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
-            => CreateRecordAsync(FsPath.Parse(name), contents, progress, cancellationToken);
+        public virtual Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, string contentType = null, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+            => CreateRecordAsync(FsPath.Parse(name), contents, contentType, progress, cancellationToken);
 
         public virtual Task<IStorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => CreateFolderAsync(FsPath.Parse(name), progress, cancellationToken);
+
+        public virtual Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+            => Task.FromResult<IStoragePath>(null);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
 {
     public abstract class StorageItem : StoragePath, IStorageItem
     {
-        public string Name => Path.GetFileName(LocalPath);
+        public abstract IStorageSecurity Security { get; }
 
         public StorageItem(StorageRoot storageRoot, string localPath) : base(storageRoot, localPath) { }
 
@@ -31,5 +32,12 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
             return Task.FromResult(result);
         }
+
+        public override async Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await GetContainerAsync(cancellationToken);
+        }
+
+        public abstract Task UpdateSecurityAsync(IStorageSecurity security, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

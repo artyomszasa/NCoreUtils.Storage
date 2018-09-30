@@ -10,7 +10,7 @@ namespace NCoreUtils.Storage
     {
         IAsyncEnumerable<IStorageItem> GetContentsAsync();
 
-        Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IStorageRecord> CreateRecordAsync(string name, Stream contents, string contentType = null, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
 
         Task<IStorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken));
     }

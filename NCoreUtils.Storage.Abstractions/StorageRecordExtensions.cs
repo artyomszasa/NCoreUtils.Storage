@@ -55,8 +55,8 @@ namespace NCoreUtils.Storage
 
         public static Stream CreateReadableStream(this IStorageRecord storageRecord) => storageRecord.CreateReadableStreamAsync().GetAwaiter().GetResult();
 
-        public static void UpdateContent(this IStorageRecord storageRecord, Stream contents, IProgress progress = null)
-            => storageRecord.UpdateContentAsync(contents, progress).GetAwaiter().GetResult();
+        public static void UpdateContent(this IStorageRecord storageRecord, Stream contents, string contentType = null, IProgress progress = null)
+            => storageRecord.UpdateContentAsync(contents, contentType, progress).GetAwaiter().GetResult();
 
         public static IStorageRecord Rename(this IStorageRecord storageRecord, string name, IProgress progress = null) => storageRecord.RenameAsync(name, progress).GetAwaiter().GetResult();
 

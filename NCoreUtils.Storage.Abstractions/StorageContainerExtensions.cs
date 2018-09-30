@@ -11,8 +11,8 @@ namespace NCoreUtils.Storage
     {
         public static IEnumerable<IStorageItem> GetContents(this IStorageContainer storageContainer) => storageContainer.GetContentsAsync().ToEnumerable();
 
-        public static IStorageRecord CreateRecord(this IStorageContainer storageContainer, string name, Stream contents, IProgress progress = null)
-            => storageContainer.CreateRecordAsync(name, contents, progress).GetAwaiter().GetResult();
+        public static IStorageRecord CreateRecord(this IStorageContainer storageContainer, string name, Stream contents, string contentType = null, IProgress progress = null)
+            => storageContainer.CreateRecordAsync(name, contents, contentType, progress).GetAwaiter().GetResult();
 
         public static IStorageFolder CreateFolder(this IStorageContainer storageContainer, string name, IProgress progress = null)
             => storageContainer.CreateFolderAsync(name, progress).GetAwaiter().GetResult();
@@ -21,19 +21,17 @@ namespace NCoreUtils.Storage
             this IStorageContainer storageContainer,
             string name,
             byte[] data,
+            string contentType = null,
             IProgress progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var buffer = new MemoryStream(data, false))
             {
-                return await storageContainer.CreateRecordAsync(name, buffer, progress, cancellationToken).ConfigureAwait(false);
+                return await storageContainer.CreateRecordAsync(name, buffer, contentType, progress, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        public static Task<IStorageRecord> CreateRecordAsync(this IStorageContainer storageContainer, string name, byte[] data, CancellationToken cancellationToken)
-            => storageContainer.CreateRecordAsync(name, data, null, cancellationToken);
-
-        public static IStorageRecord CreateRecord(this IStorageContainer storageContainer, string name, byte[] data, IProgress progress = null)
-            => storageContainer.CreateRecordAsync(name, data, progress).GetAwaiter().GetResult();
+        public static IStorageRecord CreateRecord(this IStorageContainer storageContainer, string name, byte[] data, string contentType = null, IProgress progress = null)
+            => storageContainer.CreateRecordAsync(name, data, contentType, progress).GetAwaiter().GetResult();
     }
 }

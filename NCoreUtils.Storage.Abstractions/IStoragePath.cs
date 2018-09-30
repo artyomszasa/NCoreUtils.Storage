@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NCoreUtils.Storage
 {
@@ -6,6 +8,10 @@ namespace NCoreUtils.Storage
     {
         IStorageRoot StorageRoot { get; }
 
+        string Name { get; }
+
         Uri Uri { get; }
+
+        Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

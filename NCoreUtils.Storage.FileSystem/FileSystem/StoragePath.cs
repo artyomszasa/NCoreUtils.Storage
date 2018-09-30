@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace NCoreUtils.Storage.FileSystem
@@ -14,6 +16,8 @@ namespace NCoreUtils.Storage.FileSystem
         /// </summary>
         public FsPath LocalPath { get; }
 
+        public string Name => LocalPath.Name;
+
         public ILogger Logger => StorageRoot.Logger;
 
         public StoragePath(StorageRoot storageRoot, FsPath localPath)
@@ -23,5 +27,10 @@ namespace NCoreUtils.Storage.FileSystem
         }
 
         public Uri Uri => new UriBuilder { Scheme = "file", Host = string.Empty, Path = StorageRoot.GetUriPath(this) }.Uri;
+
+        public virtual async Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await StorageRoot.StorageProvider.ResolvePathAsync(System.IO.Path.GetDirectoryName(StorageRoot.GetFullPath(LocalPath)), cancellationToken);
+        }
     }
 }

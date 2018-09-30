@@ -60,7 +60,7 @@ namespace NCoreUtils.Storage.FileSystem
             return Task.FromResult<IStorageRecord>(StorageRoot.RenameRecord(this, name, progress));
         }
 
-        public async Task UpdateContentAsync(Stream contents, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task UpdateContentAsync(Stream contents, string contentType = null, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var fullPath = StorageRoot.GetFullPath(LocalPath);
@@ -82,7 +82,7 @@ namespace NCoreUtils.Storage.FileSystem
                 Logger.LogError(exn, "Failed to update file \"{0}\".", fullPath);
                 throw;
             }
-            MediaType = await StorageRoot.GetMediaTypeAsync(LocalPath, CancellationToken.None).ConfigureAwait(false);
+            MediaType = contentType ?? await StorageRoot.GetMediaTypeAsync(LocalPath, CancellationToken.None).ConfigureAwait(false);
         }
     }
 }
