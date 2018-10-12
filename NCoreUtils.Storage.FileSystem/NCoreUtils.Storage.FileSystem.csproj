@@ -7,7 +7,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.1.1" />
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.1" />
+    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.2" />
     <PackageReference Include="NCoreUtils.Features" Version="1.1.0" />
     <PackageReference Include="NCoreUtils.Linq.Extensions" Version="1.0.5" />
   </ItemGroup>

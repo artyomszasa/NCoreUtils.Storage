@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NCoreUtils.Storage
+namespace NCoreUtils.Storage.Features
 {
     public interface ICacheControlFeature
     {

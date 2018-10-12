@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
-    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.1" />
+    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.2" />
     <PackageReference Include="NCoreUtils.Features" Version="1.1.0" />
     <PackageReference Include="NCoreUtils.Linq" Version="1.0.5" />
   </ItemGroup>

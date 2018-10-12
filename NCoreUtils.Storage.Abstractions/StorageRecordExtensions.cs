@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using NCoreUtils.Progress;
+using NCoreUtils.Storage.Features;
 
 namespace NCoreUtils.Storage
 {
@@ -70,5 +71,25 @@ namespace NCoreUtils.Storage
 
         public static byte[] ReadAllBytes(this IStorageRecord record) => record.ReadAllBytesAsync().GetAwaiter().GetResult();
 
+        public static async Task CopyToAsync(
+            this IStorageRecord record,
+            Stream destination,
+            int? bufferSize = null,
+            IProgress progress = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (record.GetStorageProvider().Features.TryGetFeature(out IRecordCopyFeature implementation))
+            {
+                await implementation.CopyToAsync(record, destination, bufferSize, progress, cancellationToken);
+            }
+            else
+            {
+                using (var buffer = await record.CreateReadableStreamAsync(cancellationToken))
+                {
+                    await buffer.CopyToAsync(destination, bufferSize ?? 8192, progress, cancellationToken);
+                    await destination.FlushAsync();
+                }
+            }
+        }
     }
 }

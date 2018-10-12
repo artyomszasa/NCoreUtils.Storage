@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NCoreUtils.Storage.Features;
 
 namespace NCoreUtils.Storage
 {
@@ -13,7 +14,7 @@ namespace NCoreUtils.Storage
             {
                 return feature.UpdateCacheControlAsync(item, cacheDuration, isPrivate, cancellationToken);
             }
-            throw new InvalidOperationException($"Provider {provider.GetType().FullName} does not support cache control feature.");
+            throw new NotSupportedException($"Provider {provider.GetType().FullName} does not support cache control feature.");
         }
     }
 }

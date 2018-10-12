@@ -280,20 +280,30 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
         }
 
+        public async Task DownloadRecordAsync(StorageRecord record, Stream destination, int? chunkSize = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var client = await StorageClient.CreateAsync().ConfigureAwait(false);
+            var options = new DownloadObjectOptions();
+            if (chunkSize.HasValue)
+            {
+                options.ChunkSize = chunkSize.Value;
+            }
+            await client.DownloadObjectAsync(record.GoogleObject, destination, options, cancellationToken).ConfigureAwait(false);
+        }
+
         public virtual async Task<Stream> CreateReadableStreamAsync(StorageRecord record, CancellationToken cancellationToken)
         {
             // TODO: avoid using large in-memory buffers...
             Stream buffer;
             if (record.Size > MaxBufferSize)
             {
-                buffer = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.Read, 8091, FileOptions.DeleteOnClose);
+                buffer = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.Read, 8192, FileOptions.DeleteOnClose);
             }
             else
             {
                 buffer = new MemoryStream((int)record.Size);
             }
-            var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-            await client.DownloadObjectAsync(record.GoogleObject, buffer, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await DownloadRecordAsync(record, buffer, cancellationToken: cancellationToken);
             buffer.Seek(0, SeekOrigin.Begin);
             return buffer;
         }

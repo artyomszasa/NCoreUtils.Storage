@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NCoreUtils.ContentDetection;
 using NCoreUtils.Features;
 using NCoreUtils.Linq;
+using NCoreUtils.Storage.Features;
 using StorageClient = Google.Cloud.Storage.V1.StorageClient;
 
 namespace NCoreUtils.Storage.GoogleCloudStorage
@@ -36,6 +37,8 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
             var googleFeatures = new FeatureCollectionBuilder();
             googleFeatures.AddFeature<ICacheControlFeature>(new CacheControlFeature());
+            googleFeatures.AddFeature<ICreateByPathFeature>(new CreateByPathFeature());
+            googleFeatures.AddFeature<IRecordCopyFeature>(new RecordCopyFeature());
             Features = new CompositeFeatureCollection(features, googleFeatures.Build());
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             ContentAnalyzer = contentAnalyzer;
