@@ -92,5 +92,48 @@ namespace NCoreUtils.Storage
                     throw new NotImplementedException($"No implementation provided that handles {p.GetType()}");
             }
         }
+
+        public static async Task<IStorageRecord> CreateRecordAsync(
+            this IStorageProvider storageProvider,
+            IStoragePath path,
+            byte[] contents,
+            string contentType = null,
+            IProgress progress = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (var buffer = new MemoryStream(contents, 0, contents.Length, false, true))
+            {
+                return await storageProvider.CreateRecordAsync(path, buffer, contentType, progress, cancellationToken);
+            }
+        }
+
+        public static IStorageFolder CreateFolder(
+            this IStorageProvider storageProvider,
+            IStoragePath path,
+            bool recursive = false,
+            IProgress progress = null)
+        {
+            return storageProvider.CreateFolderAsync(path, recursive, progress).GetAwaiter().GetResult();
+        }
+
+        public static IStorageRecord CreateRecord(
+            this IStorageProvider storageProvider,
+            IStoragePath path,
+            Stream contents,
+            string contentType = null,
+            IProgress progress = null)
+        {
+            return storageProvider.CreateRecordAsync(path, contents, contentType, progress).GetAwaiter().GetResult();
+        }
+
+        public static IStorageRecord CreateRecord(
+            this IStorageProvider storageProvider,
+            IStoragePath path,
+            byte[] contents,
+            string contentType = null,
+            IProgress progress = null)
+        {
+            return storageProvider.CreateRecordAsync(path, contents, contentType, progress).GetAwaiter().GetResult();
+        }
     }
 }

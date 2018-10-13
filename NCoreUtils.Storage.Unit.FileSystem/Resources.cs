@@ -1,6 +1,6 @@
-namespace NCoreUtils.Storage.FileSystem
+namespace NCoreUtils.Storage.Unit
 {
-    static class Resources
+    public static class Resources
     {
         static byte[] ReadResource(string name)
         {

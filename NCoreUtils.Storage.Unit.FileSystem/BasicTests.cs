@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NCoreUtils.ContentDetection;
 using NCoreUtils.Features;
+using NCoreUtils.Storage.Unit;
 using Xunit;
 
 namespace NCoreUtils.Storage.FileSystem

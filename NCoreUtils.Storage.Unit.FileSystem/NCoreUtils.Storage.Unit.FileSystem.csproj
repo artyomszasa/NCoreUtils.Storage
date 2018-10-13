@@ -14,13 +14,14 @@
     <PackageReference Include="NCoreUtils.ContentDetection" Version="1.1.2" />
     <PackageReference Include="NCoreUtils.ContentDetection.Magic.Libmagic" Version="1.1.2" />
     <PackageReference Include="ReportGenerator" Version="3.1.2" PrivateAssets="All" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.4.0-beta.1.build3958" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage.FileSystem\NCoreUtils.Storage.FileSystem.csproj" />
+    <ProjectReference Include="..\NCoreUtils.Storage.GoogleCloudStorage\NCoreUtils.Storage.GoogleCloudStorage.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Resources\x.png" />

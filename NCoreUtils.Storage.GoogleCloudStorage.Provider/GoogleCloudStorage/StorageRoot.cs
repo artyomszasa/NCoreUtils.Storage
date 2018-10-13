@@ -51,24 +51,27 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             => await CreateRecordAsync(name, contents, contentType, progress, cancellationToken);
 
 
-        protected internal virtual async Task<IAsyncEnumerable<StorageItem>> GetContentsAsync(string localName, CancellationToken cancellationToken)
+        protected internal virtual Task<IAsyncEnumerable<StorageItem>> GetContentsAsync(string localName, CancellationToken cancellationToken)
         {
-            var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-            var name = localName?.Trim('/');
-            return client.ListObjectsAsync(BucketName, string.IsNullOrEmpty(name) ? name : name + '/', _delimiterOptions)
-                .AsRawResponses()
-                .SelectMany(response =>
-                {
-                    var folders = null == response.Prefixes
-                        ? Enumerable.Empty<StorageItem>()
-                        : response.Prefixes
-                            .Select(prefix => (StorageItem)new StorageFolder(this, prefix));
-                    var records = null == response.Items
-                        ? Enumerable.Empty<StorageItem>()
-                        : response.Items
-                            .Select(googleObject => (StorageItem)new StorageRecord(this, googleObject.Name, googleObject));
-                    return folders.Concat(records).ToAsyncEnumerable();
-                });
+            return UseStorageClient(client =>
+            {
+                var name = localName?.Trim('/');
+                var results = client.ListObjectsAsync(BucketName, string.IsNullOrEmpty(name) ? name : name + '/', _delimiterOptions)
+                    .AsRawResponses()
+                    .SelectMany(response =>
+                    {
+                        var folders = null == response.Prefixes
+                            ? Enumerable.Empty<StorageItem>()
+                            : response.Prefixes
+                                .Select(prefix => (StorageItem)new StorageFolder(this, prefix));
+                        var records = null == response.Items
+                            ? Enumerable.Empty<StorageItem>()
+                            : response.Items
+                                .Select(googleObject => (StorageItem)new StorageRecord(this, googleObject.Name, googleObject));
+                        return folders.Concat(records).ToAsyncEnumerable();
+                    });
+                return Task.FromResult(results);
+            });
         }
 
         protected virtual IAsyncEnumerable<StorageRecord> RecursiveCollectObjectsAsync(string localPath)
@@ -95,22 +98,25 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         internal StorageSecurity GetPermissions(GoogleObject obj)
         {
             var builder = ImmutableDictionary.CreateBuilder<StorageActor, StoragePermissions>();
-            foreach (var objectAccessControl in obj.Acl)
+            if (null != obj.Acl)
             {
-                switch (objectAccessControl.Entity)
+                foreach (var objectAccessControl in obj.Acl)
                 {
-                    case "allAuthenticatedUsers":
-                        builder.Add(StorageActor.Authenticated, objectAccessControl.GetStoragePermissions());
-                        break;
-                    case "allUsers":
-                        builder.Add(StorageActor.Public, objectAccessControl.GetStoragePermissions());
-                        break;
-                    case string entity when entity.StartsWith("user-"):
-                        builder.Add(StorageActor.User(objectAccessControl.Email ?? objectAccessControl.EntityId), objectAccessControl.GetStoragePermissions());
-                        break;
-                    case string entity when entity.StartsWith("group-"):
-                        builder.Add(StorageActor.Group(objectAccessControl.Email ?? objectAccessControl.EntityId), objectAccessControl.GetStoragePermissions());
-                        break;
+                    switch (objectAccessControl.Entity)
+                    {
+                        case "allAuthenticatedUsers":
+                            builder.Add(StorageActor.Authenticated, objectAccessControl.GetStoragePermissions());
+                            break;
+                        case "allUsers":
+                            builder.Add(StorageActor.Public, objectAccessControl.GetStoragePermissions());
+                            break;
+                        case string entity when entity.StartsWith("user-"):
+                            builder.Add(StorageActor.User(objectAccessControl.Email ?? objectAccessControl.EntityId), objectAccessControl.GetStoragePermissions());
+                            break;
+                        case string entity when entity.StartsWith("group-"):
+                            builder.Add(StorageActor.Group(objectAccessControl.Email ?? objectAccessControl.EntityId), objectAccessControl.GetStoragePermissions());
+                            break;
+                    }
                 }
             }
             return new StorageSecurity(builder.ToImmutable());
@@ -129,7 +135,9 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
         }
 
-        public Task<StorageClient> CreateStorageClientAsync() => StorageProvider.CreateStorageClientAsync();
+        public Task UseStorageClient(Func<StorageClient, Task> action) => StorageProvider.UseStorageClient(action);
+
+        public Task<T> UseStorageClient<T>(Func<StorageClient, Task<T>> action) => StorageProvider.UseStorageClient(action);
 
         public virtual Task<StorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -197,10 +205,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                         ContentLanguage = StorageProvider.Options.DefaultContentLanguage,
                         ContentType = contentType
                     };
-                    var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-                    // var upload = client.CreateObjectUploader(googleObject, contents, options);
-                    // var uploading = await upload.UploadAsync(cancellationToken);
-                    googleObject = await client.UploadObjectAsync(googleObject, contents, options, cancellationToken).ConfigureAwait(false);
+                    googleObject = await UseStorageClient(client => client.UploadObjectAsync(googleObject, contents, options, cancellationToken)).ConfigureAwait(false);
                     uploadProgress.SetValue(1);
                 }
             }
@@ -239,8 +244,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                     ContentType = mediaType ?? "application/octet-stream",
                     Size = (ulong)clength
                 };
-                var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-                return await client.UploadObjectAsync(googleObject, stream, options, cancellationToken, uploadProgress).ConfigureAwait(false);
+                return await UseStorageClient(client => client.UploadObjectAsync(googleObject, stream, options, cancellationToken, uploadProgress)).ConfigureAwait(false);
             }
         }
 
@@ -251,18 +255,15 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             {
                 case StorageRecord record:
                     progress.SetTotal(1);
-                    {
-                        var client = await CreateStorageClientAsync().ConfigureAwait(false);
-                        await client.DeleteObjectAsync(record.GoogleObject).ConfigureAwait(false);
-                    }
+                    await UseStorageClient(client => client.DeleteObjectAsync(record.GoogleObject)).ConfigureAwait(false);
                     progress.SetValue(1);
                     break;
                 case StorageFolder folder:
-                    var records = await RecursiveCollectObjectsAsync(folder.LocalPath).ToList(cancellationToken);
+                    var records = await RecursiveCollectObjectsAsync(folder.LocalPath).ToList(cancellationToken).ConfigureAwait(false);
                     cancellationToken.ThrowIfCancellationRequested();
                     progress.SetTotal(records.Count);
+                    await UseStorageClient(async client =>
                     {
-                        var client = await CreateStorageClientAsync().ConfigureAwait(false);
                         foreach (var record in records)
                         {
                             await client.DeleteObjectAsync(record.GoogleObject).ConfigureAwait(false);
@@ -271,7 +272,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                                 ++progress.Value;
                             }
                         }
-                    }
+                    });
                     break;
                 default:
                     progress.SetTotal(1);
@@ -280,15 +281,17 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
         }
 
-        public async Task DownloadRecordAsync(StorageRecord record, Stream destination, int? chunkSize = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task DownloadRecordAsync(StorageRecord record, Stream destination, int? chunkSize = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-            var options = new DownloadObjectOptions();
-            if (chunkSize.HasValue)
+            return UseStorageClient(client =>
             {
-                options.ChunkSize = chunkSize.Value;
-            }
-            await client.DownloadObjectAsync(record.GoogleObject, destination, options, cancellationToken).ConfigureAwait(false);
+                var options = new DownloadObjectOptions();
+                if (chunkSize.HasValue)
+                {
+                    options.ChunkSize = chunkSize.Value;
+                }
+                return client.DownloadObjectAsync(record.GoogleObject, destination, options, cancellationToken);
+            });
         }
 
         public virtual async Task<Stream> CreateReadableStreamAsync(StorageRecord record, CancellationToken cancellationToken)
@@ -311,20 +314,22 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         public IAsyncEnumerable<IStorageItem> GetContentsAsync()
             => DelayedAsyncEnumerable.Delay(cancellationToken => GetContentsAsync(null, cancellationToken));
 
-        public virtual async Task<StorageRecord> RenameAsync(StorageRecord record, string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual Task<StorageRecord> RenameAsync(StorageRecord record, string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             progress.SetTotal(3);
             progress.SetValue(0);
-            var client = await CreateStorageClientAsync().ConfigureAwait(false);
-            var slashIndex = record.LocalPath.LastIndexOf('/');
-            var folder = -1 == slashIndex ? "" : record.LocalPath.Substring(0, slashIndex + 1);
-            var newPath = folder + name;
-            progress.SetValue(1);
-            var gobj = await client.CopyObjectAsync(BucketName, record.LocalPath, BucketName, newPath, cancellationToken: cancellationToken).ConfigureAwait(false);
-            progress.SetValue(2);
-            await client.DeleteObjectAsync(record.GoogleObject).ConfigureAwait(false);
-            progress.SetValue(3);
-            return new StorageRecord(this, newPath, gobj);
+            return UseStorageClient(async client =>
+            {
+                var slashIndex = record.LocalPath.LastIndexOf('/');
+                var folder = -1 == slashIndex ? "" : record.LocalPath.Substring(0, slashIndex + 1);
+                var newPath = folder + name;
+                progress.SetValue(1);
+                var gobj = await client.CopyObjectAsync(BucketName, record.LocalPath, BucketName, newPath, cancellationToken: cancellationToken).ConfigureAwait(false);
+                progress.SetValue(2);
+                await client.DeleteObjectAsync(record.GoogleObject).ConfigureAwait(false);
+                progress.SetValue(3);
+                return new StorageRecord(this, newPath, gobj);
+            });
         }
 
         public virtual async Task UpdateContentAsync(StorageRecord record, Stream contents, string contentType, IProgress progress, CancellationToken cancellationToken)
@@ -352,7 +357,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             GoogleObject googleObject;
             if (contentLength.HasValue && contents.CanSeek)
             {
-                googleObject = await UpdateSeekableStream(contents, contentLength.Value);
+                googleObject = await UpdateSeekableStream(contents, contentLength.Value).ConfigureAwait(false);
             }
             else
             {
@@ -361,7 +366,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                     // if no content length can be deternied and content type is not set --> stream must be buffered....
                     using (var buffer = new MemoryStream())
                     {
-                        await contents.CopyToAsync(buffer);
+                        await contents.CopyToAsync(buffer).ConfigureAwait(false);
                         buffer.Seek(0, SeekOrigin.Begin);
                         googleObject = await UpdateSeekableStream(buffer, buffer.Length);
                     }
@@ -381,11 +386,13 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                     record.GoogleObject.ETag = null;
                     record.GoogleObject.Md5Hash = null;
                     record.GoogleObject.ContentType = mediaType ?? "application/octet-stream";
-                    var client = await CreateStorageClientAsync().ConfigureAwait(false);
-                    record.GoogleObject = await client.UploadObjectAsync(record.GoogleObject, contents, options, cancellationToken).ConfigureAwait(false);
-                    miscProgress.SetValue(2);
-                    uploadProgress.SetValue(1);
-                    googleObject = record.GoogleObject;
+                    googleObject = await UseStorageClient(async client =>
+                    {
+                        record.GoogleObject = await client.UploadObjectAsync(record.GoogleObject, contents, options, cancellationToken).ConfigureAwait(false);
+                        miscProgress.SetValue(2);
+                        uploadProgress.SetValue(1);
+                        return record.GoogleObject;
+                    }).ConfigureAwait(false);
                 }
             }
             record.GoogleObject = googleObject;
@@ -406,10 +413,12 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                 record.GoogleObject.ETag = null;
                 record.GoogleObject.Md5Hash = null;
                 record.GoogleObject.ContentType = mediaType ?? "application/octet-stream";
-                var client = await CreateStorageClientAsync().ConfigureAwait(false);
-                record.GoogleObject = await client.UploadObjectAsync(record.GoogleObject, stream, options, cancellationToken, uploadProgress).ConfigureAwait(false);
-                miscProgress.SetValue(2);
-                return record.GoogleObject;
+                return await UseStorageClient(async client =>
+                {
+                    record.GoogleObject = await client.UploadObjectAsync(record.GoogleObject, stream, options, cancellationToken, uploadProgress).ConfigureAwait(false);
+                    miscProgress.SetValue(2);
+                    return record.GoogleObject;
+                }).ConfigureAwait(false);
             }
         }
 
@@ -421,10 +430,12 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             try
             {
                 gObject.Acl = acl;
-                var client = await CreateStorageClientAsync().ConfigureAwait(false);
-                var res = await client.PatchObjectAsync(gObject, cancellationToken: cancellationToken).ConfigureAwait(false);
-                success = true;
-                return res;
+                return await UseStorageClient(async client =>
+                {
+                    var res = await client.PatchObjectAsync(gObject, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    success = true;
+                    return res;
+                }).ConfigureAwait(false);
             }
             finally
             {

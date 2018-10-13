@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,6 +17,27 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
 {
     public class StorageProvider : IStorageProvider
     {
+        [ExcludeFromCodeCoverage]
+        sealed class ClientPool
+        {
+            readonly ConcurrentQueue<StorageClient> _queue = new ConcurrentQueue<StorageClient>();
+
+            [ExcludeFromCodeCoverage]
+            public Task<StorageClient> GetAsync()
+            {
+                if (_queue.TryDequeue(out var client))
+                {
+                    return Task.FromResult(client);
+                }
+                return StorageClient.CreateAsync();
+            }
+
+            [ExcludeFromCodeCoverage]
+            public void Return(StorageClient client) => _queue.Enqueue(client);
+        }
+
+        private ClientPool _pool = new ClientPool();
+
         protected const string GoogleStorageScheme = "gs";
 
         public IFeatureCollection Features { get; }
@@ -75,42 +98,76 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             return mediaType;
         }
 
-        public virtual Task<StorageClient> CreateStorageClientAsync() => StorageClient.CreateAsync();
+        [ExcludeFromCodeCoverage]
+        internal virtual Task<StorageClient> GetPooledStorageClientAsync() => _pool.GetAsync();
+
+        [ExcludeFromCodeCoverage]
+        internal virtual void ReturnPooledStorageClientAsync(StorageClient client) => _pool.Return(client);
+
+        public async Task UseStorageClient(Func<StorageClient, Task> action)
+        {
+            var client = await GetPooledStorageClientAsync().ConfigureAwait(false);
+            try
+            {
+                await action(client);
+            }
+            finally
+            {
+                ReturnPooledStorageClientAsync(client);
+            }
+        }
+
+        public async Task<T> UseStorageClient<T>(Func<StorageClient, Task<T>> action)
+        {
+            var client = await GetPooledStorageClientAsync().ConfigureAwait(false);
+            try
+            {
+                return await action(client);
+            }
+            finally
+            {
+                ReturnPooledStorageClientAsync(client);
+            }
+        }
 
         public virtual IAsyncEnumerable<StorageRoot> GetRootsAsync()
         {
             return DelayedAsyncEnumerable.Delay(async cancellationToken =>
             {
-                var client = await StorageClient.CreateAsync().ConfigureAwait(false);
-                return client.ListBucketsAsync(Options.ProjectId)
-                    .Select(bucket => new StorageRoot(this, bucket.Name));
+                var client = await GetPooledStorageClientAsync().ConfigureAwait(false);
+                var results = client.ListBucketsAsync(Options.ProjectId)
+                    .Select(bucket => new StorageRoot(this, bucket.Name))
+                    .Finally(() => ReturnPooledStorageClientAsync(client));
+                return results;
             });
         }
 
-        public virtual async Task<StoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual Task<StoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (GoogleStorageScheme == uri.Scheme)
             {
-                var client = await CreateStorageClientAsync().ConfigureAwait(false);
-                try
+                return UseStorageClient<StoragePath>(async client =>
                 {
-                    var bucket = await client.GetBucketAsync(uri.Host, cancellationToken: cancellationToken).ConfigureAwait(false);
                     try
                     {
-                        var googleObject = await client.GetObjectAsync(bucket.Name, uri.LocalPath.TrimStart('/'), cancellationToken: cancellationToken).ConfigureAwait(false);
-                        return new StorageRecord(new StorageRoot(this, bucket.Name), uri.LocalPath.TrimStart('/'), googleObject);
+                        var bucket = await client.GetBucketAsync(uri.Host, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        try
+                        {
+                            var googleObject = await client.GetObjectAsync(bucket.Name, uri.LocalPath.TrimStart('/'), cancellationToken: cancellationToken).ConfigureAwait(false);
+                            return new StorageRecord(new StorageRoot(this, bucket.Name), uri.LocalPath.TrimStart('/'), googleObject);
+                        }
+                        catch
+                        {
+                            return new StorageFolder(new StorageRoot(this, bucket.Name), uri.LocalPath.TrimStart('/'));
+                        }
                     }
                     catch
                     {
-                        return new StorageFolder(new StorageRoot(this, bucket.Name), uri.LocalPath.TrimStart('/'));
+                        return null;
                     }
-                }
-                catch
-                {
-                    return null;
-                }
+                });
             }
-            return null;
+            return Task.FromResult<StoragePath>(null);
         }
     }
 }

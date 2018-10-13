@@ -10,6 +10,10 @@ namespace NCoreUtils.Storage
 
         public static StorageActor User(string id)
         {
+            if (null == id)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
             if (string.IsNullOrEmpty(id))
             {
                 throw new System.ArgumentException("User id must be non empty string", nameof(id));
@@ -19,6 +23,10 @@ namespace NCoreUtils.Storage
 
         public static StorageActor Group(string id)
         {
+            if (null == id)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
             if (string.IsNullOrEmpty(id))
             {
                 throw new System.ArgumentException("Group id must be non empty string", nameof(id));

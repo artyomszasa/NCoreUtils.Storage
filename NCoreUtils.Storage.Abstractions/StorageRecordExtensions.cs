@@ -91,5 +91,14 @@ namespace NCoreUtils.Storage
                 }
             }
         }
+
+        public static void CopyTo(
+            this IStorageRecord record,
+            Stream destination,
+            int? bufferSize = null,
+            IProgress progress = null)
+        {
+            record.CopyToAsync(destination, bufferSize, progress).GetAwaiter().GetResult();
+        }
     }
 }
