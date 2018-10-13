@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>NCoreUtils.Storage.FileSystem</RootNamespace>
   </PropertyGroup>
@@ -13,9 +13,9 @@
     <PackageReference Include="NCoreUtils.ContentDetection" Version="1.1.2" />
     <PackageReference Include="NCoreUtils.ContentDetection.Magic.Libmagic" Version="1.1.2" />
     <PackageReference Include="ReportGenerator" Version="3.1.2" PrivateAssets="All" />
-    <PackageReference Include="xunit" Version="2.4.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="2.4.0-beta.1.build3958" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
