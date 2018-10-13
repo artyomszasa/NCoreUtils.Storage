@@ -62,6 +62,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             googleFeatures.AddFeature<ICacheControlFeature>(new CacheControlFeature());
             googleFeatures.AddFeature<ICreateByPathFeature>(new CreateByPathFeature());
             googleFeatures.AddFeature<IRecordCopyFeature>(new RecordCopyFeature());
+            googleFeatures.AddFeature<ILoggerFeature>(new LoggerFeature());
             Features = new CompositeFeatureCollection(features, googleFeatures.Build());
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             ContentAnalyzer = contentAnalyzer;

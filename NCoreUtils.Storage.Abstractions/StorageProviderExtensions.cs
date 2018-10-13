@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NCoreUtils.Progress;
 using NCoreUtils.Storage.Features;
 
@@ -11,9 +12,32 @@ namespace NCoreUtils.Storage
 {
     public static class StorageProviderExtensions
     {
+        sealed class DummyDisposable : IDisposable
+        {
+            public static DummyDisposable Instance { get; } = new DummyDisposable();
+            DummyDisposable() { }
+            public void Dispose() { }
+        }
+
+        sealed class DummyLogger : ILogger
+        {
+            public static DummyLogger Instance { get; } = new DummyLogger();
+            DummyLogger() { }
+            public IDisposable BeginScope<TState>(TState state) => DummyDisposable.Instance;
+            public bool IsEnabled(LogLevel logLevel) => false;
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
+        }
+
         public static IEnumerable<IStorageRoot> GetRoots(this IStorageProvider storageProvider) => storageProvider.GetRootsAsync().ToEnumerable();
 
         public static IStoragePath Resolve(this IStorageProvider storageProvider, Uri uri) => storageProvider.ResolveAsync(uri).GetAwaiter().GetResult();
+
+        public static ILogger GetLogger(this IStorageProvider storageProvider)
+        {
+            return storageProvider.Features.TryGetFeature(out ILoggerFeature implementation)
+                ? implementation.GetLogger(storageProvider)
+                : DummyLogger.Instance;
+        }
 
         public static async Task<IStorageFolder> CreateFolderAsync(
             this IStorageProvider storageProvider,
