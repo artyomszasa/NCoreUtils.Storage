@@ -1,0 +1,7 @@
+language: csharp
+solution: NCoreUtils.Storage.sln
+mono: none
+dotnet: 2.1.401
+script:
+  - dotnet restore
+  - dotnet test -c Release -f netcoreapp2.1 NCoreUtils.Storage.Unit.FileSystem
