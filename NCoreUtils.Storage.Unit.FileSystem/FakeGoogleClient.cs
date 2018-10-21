@@ -97,6 +97,42 @@ namespace NCoreUtils.Storage.Unit
         }
 
         // *************************************************************************************************************
+        // GET OBJECT
+
+        public override Object CopyObject(
+            string sourceBucket,
+            string sourceObjectName,
+            string destinationBucket,
+            string destinationObjectName,
+            CopyObjectOptions options = null)
+        {
+            var sourceKey = Key(sourceBucket, sourceObjectName);
+            var targetkey = Key(destinationBucket, destinationObjectName);
+            if (_entries.TryGetValue(sourceKey, out var source))
+            {
+                var entry = new Entry(destinationObjectName, source.MediaType, source.Data);
+                _entries.AddOrUpdate(targetkey, entry, (_, __) => entry);
+                return entry.ToObject(destinationBucket);
+            }
+            else
+            {
+                // FIXME: Google compatible exception
+                throw new InvalidOperationException($"No object found for {sourceKey}.");
+            }
+        }
+
+        public override Task<Object> CopyObjectAsync(
+            string sourceBucket,
+            string sourceObjectName,
+            string destinationBucket = null,
+            string destinationObjectName = null,
+            CopyObjectOptions options = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return Task.Run(() => CopyObject(sourceBucket, sourceObjectName, destinationBucket, destinationObjectName, options));
+        }
+
+        // *************************************************************************************************************
         // DELETE OBJECT
 
         public override void DeleteObject(string bucket, string objectName, DeleteObjectOptions options = null)
@@ -267,7 +303,7 @@ namespace NCoreUtils.Storage.Unit
                 var nam = key.Substring(i + 1);
                 if (buck == bucket && (null == prefix || nam.StartsWith(prefix)))
                 {
-                    var suffix = nam.Substring(prefix.Length).TrimStart('/');
+                    var suffix = null == prefix ? nam : nam.Substring(prefix.Length).TrimStart('/');
                     if (options?.Delimiter == null || -1 == suffix.IndexOf(options?.Delimiter))
                     {
                         entries.Add(kv.Value);

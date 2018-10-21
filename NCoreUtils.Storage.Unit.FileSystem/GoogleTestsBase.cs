@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -163,6 +165,107 @@ namespace NCoreUtils.Storage.Unit
             ((GoogleCloudStorage.StorageFolder)folder).Delete();
             var record2 = provider.Resolve(path.Uri);
             Assert.False(record2.IsRecord());
+        });
+
+        public virtual void UploadAndRename() => Scoped(serviceProvider =>
+        {
+            var provider = serviceProvider.GetRequiredService<IStorageProvider>();
+            var path = provider.Resolve(new Uri($"gs://{_bucketName}/x.png"));
+            var record0 = (GoogleCloudStorage.StorageRecord)provider.CreateRecord(path, Resources.Png.X, "image/png");
+            var record1 = record0.Rename("y.png");
+            byte[] data;
+            using (var memoryStream = new System.IO.MemoryStream())
+            {
+                record1.CopyTo(memoryStream);
+                memoryStream.Flush();
+                data = memoryStream.ToArray();
+            }
+            var folder = provider.Resolve(new Uri($"gs://{_bucketName}"));
+            Assert.Equal(Resources.Png.X, data);
+            Assert.Equal(folder.Uri, record1.GetParent().Uri);
+            Assert.Single(((IStorageContainer)folder).GetContents(), item => item.IsRecord() && item.Uri == record1.Uri);
+            record1.Delete();
+            Assert.DoesNotContain(((IStorageContainer)folder).GetContents(), item => item.Uri == record1.Uri);
+        });
+
+        public virtual void Root() => Scoped(serviceProvider =>
+        {
+            var provider = serviceProvider.GetRequiredService<IStorageProvider>();
+            var path = provider.Resolve(new Uri($"gs://{_bucketName}"));
+            var root = Assert.IsType<GoogleCloudStorage.StorageRoot>(path);
+
+            Assert.Throws<ArgumentNullException>(() => new GoogleCloudStorage.StorageRoot(null, _bucketName));
+            Assert.Throws<ArgumentNullException>(() => new GoogleCloudStorage.StorageRoot((GoogleCloudStorage.StorageProvider)provider, null));
+            Assert.Throws<ArgumentException>(() => new GoogleCloudStorage.StorageRoot((GoogleCloudStorage.StorageProvider)provider, string.Empty));
+
+            Assert.Equal(_bucketName, root.Name);
+            Assert.Equal(_bucketName, root.BucketName);
+            Assert.Null(root.GetParent());
+
+            var record = root.CreateRecord("x.png", Resources.Png.X, "image/png");
+            Assert.Equal(record.Uri, new Uri($"gs://{_bucketName}/x.png"));
+            Assert.Equal("x.png", record.Name);
+            Assert.Equal(Resources.Png.X.Length, record.Size);
+        });
+
+        public virtual void NonSeekableStream() => Scoped(serviceProvider =>
+        {
+            var provider = serviceProvider.GetRequiredService<IStorageProvider>();
+            var path = provider.Resolve(new Uri($"gs://{_bucketName}/x.png"));
+            GoogleCloudStorage.StorageRecord record0;
+            using (var pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.None))
+            using (var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.ClientSafePipeHandle))
+            {
+                byte[] data = Resources.Png.X;
+                pipeServer.Write(data, 0, data.Length);
+                pipeServer.Flush();
+                pipeServer.Close();
+                record0 = (GoogleCloudStorage.StorageRecord)provider.CreateRecord(path, pipeClient, "image/png");
+            }
+            Assert.Equal("image/png", record0.MediaType);
+            using (var pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.None))
+            using (var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.ClientSafePipeHandle))
+            {
+                byte[] data = Resources.Png.X;
+                pipeServer.Write(data, 0, data.Length);
+                pipeServer.Flush();
+                pipeServer.Close();
+                record0 = (GoogleCloudStorage.StorageRecord)provider.CreateRecord(path, pipeClient);
+            }
+            Assert.Equal("image/png", record0.MediaType);
+            record0.Delete();
+
+            var record1 = (GoogleCloudStorage.StorageRecord)provider.CreateRecord(path, new byte[] { 0x00 }, "application/octet-stream");
+            using (var pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.None))
+            using (var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.ClientSafePipeHandle))
+            {
+                byte[] data = Resources.Png.X;
+                pipeServer.Write(data, 0, data.Length);
+                pipeServer.Flush();
+                pipeServer.Close();
+                record1.UpdateContent(pipeClient);
+            }
+            Assert.Equal("image/png", record1.MediaType);
+            using (var pipeServer = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.None))
+            using (var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.ClientSafePipeHandle))
+            {
+                byte[] data = Resources.Png.X;
+                pipeServer.Write(data, 0, data.Length);
+                pipeServer.Flush();
+                pipeServer.Close();
+                record1.UpdateContent(pipeClient, "image/png");
+            }
+            Assert.Equal("image/png", record1.MediaType);
+        });
+
+        public virtual void Permissions() => Scoped(serviceProvider =>
+        {
+            var provider = serviceProvider.GetRequiredService<IStorageProvider>();
+            var path = provider.Resolve(new Uri($"gs://{_bucketName}/x.png"));
+            var record0 = (GoogleCloudStorage.StorageRecord)provider.CreateRecord(path, Resources.Png.X, "image/png");
+            var permissions = StorageSecurity.Empty.UpdatePublicPermissions(StoragePermissions.Read);
+            record0.UpdateSecurity(permissions);
+            Assert.Equal(record0.Security, permissions);
         });
     }
 }

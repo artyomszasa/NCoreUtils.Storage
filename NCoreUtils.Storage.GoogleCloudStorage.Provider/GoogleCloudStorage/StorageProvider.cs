@@ -152,6 +152,10 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                     try
                     {
                         var bucket = await client.GetBucketAsync(uri.Host, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        if (uri.LocalPath == "/" || string.IsNullOrEmpty(uri.LocalPath))
+                        {
+                            return new StorageRoot(this, bucket.Name);
+                        }
                         try
                         {
                             var googleObject = await client.GetObjectAsync(bucket.Name, uri.LocalPath.TrimStart('/'), cancellationToken: cancellationToken).ConfigureAwait(false);

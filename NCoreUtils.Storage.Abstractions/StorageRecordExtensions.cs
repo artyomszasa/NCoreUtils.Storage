@@ -97,8 +97,12 @@ namespace NCoreUtils.Storage
             Stream destination,
             int? bufferSize = null,
             IProgress progress = null)
-        {
-            record.CopyToAsync(destination, bufferSize, progress).GetAwaiter().GetResult();
-        }
+            => record.CopyToAsync(destination, bufferSize, progress).GetAwaiter().GetResult();
+
+        public static void UpdateSecurity(
+            this IStorageRecord record,
+            IStorageSecurity storageSecurity,
+            IProgress progress = null)
+            => record.UpdateSecurityAsync(storageSecurity, progress).GetAwaiter().GetResult();
     }
 }

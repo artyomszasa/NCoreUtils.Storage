@@ -14,7 +14,7 @@ using GoogleObjectAccessControl = Google.Apis.Storage.v1.Data.ObjectAccessContro
 
 namespace NCoreUtils.Storage.GoogleCloudStorage
 {
-    public class StorageRoot : IStorageRoot
+    public class StorageRoot : StoragePath, IStorageRoot
     {
         const long MaxBufferSize = 50 * 1024 * 1024; // 50 MB
         static readonly ListObjectsOptions _delimiterOptions = new ListObjectsOptions
@@ -22,26 +22,30 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             Delimiter = "/"
         };
 
-        IStorageRoot IStoragePath.StorageRoot => this;
-
         IStorageProvider IStorageRoot.StorageProvider => StorageProvider;
 
-        string IStoragePath.Name => BucketName;
+        public override string Name => BucketName;
 
         public StorageProvider StorageProvider { get; }
 
         public string BucketName { get; }
 
-        public Uri Uri => new Uri($"gs://{BucketName}");
+        public override Uri Uri => new Uri($"gs://{BucketName}");
 
         public StorageRoot(StorageProvider storageProvider, string bucketName)
+            : base()
         {
+            if (null == bucketName)
+            {
+                throw new ArgumentNullException(nameof(bucketName));
+            }
             if (string.IsNullOrWhiteSpace(bucketName))
             {
                 throw new ArgumentException("Bucket name must be a non-empty string.", nameof(bucketName));
             }
             StorageProvider = storageProvider ?? throw new ArgumentNullException(nameof(storageProvider));
             BucketName = bucketName;
+            StorageRoot = this;
         }
 
         async Task<IStorageFolder> IStorageContainer.CreateFolderAsync(string name, IProgress progress, CancellationToken cancellationToken)
@@ -432,7 +436,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                 gObject.Acl = acl;
                 return await UseStorageClient(async client =>
                 {
-                    var res = await client.PatchObjectAsync(gObject, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    var res = await client.UpdateObjectAsync(gObject, cancellationToken: cancellationToken).ConfigureAwait(false);
                     success = true;
                     return res;
                 }).ConfigureAwait(false);
@@ -446,7 +450,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
         }
 
-        public virtual Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public override Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
             => Task.FromResult<IStoragePath>(null);
     }
 }

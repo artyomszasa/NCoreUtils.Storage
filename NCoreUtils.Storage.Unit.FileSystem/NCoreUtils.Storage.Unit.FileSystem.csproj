@@ -55,7 +55,7 @@
     <CallTarget Targets="VSTest" />
     -->
     <Exec Command="dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover" />
-    <Exec Command="mono $(UseReportGeneratorPath) -reports:coverage.xml -targetdir:report -reporttypes:Html" Condition="'$(OS)' == 'Unix'" />
-    <Exec Command="$(UseReportGeneratorPath) -reports:coverage.xml -targetdir:report -reporttypes:Html" Condition="'$(OS)' != 'Unix'" />
+    <Exec Command="mono $(UseReportGeneratorPath) -reports:coverage.opencover.xml -targetdir:report -reporttypes:Html" Condition="'$(OS)' == 'Unix'" />
+    <Exec Command="$(UseReportGeneratorPath) -reports:coverage.opencover.xml -targetdir:report -reporttypes:Html" Condition="'$(OS)' != 'Unix'" />
   </Target>
 </Project>

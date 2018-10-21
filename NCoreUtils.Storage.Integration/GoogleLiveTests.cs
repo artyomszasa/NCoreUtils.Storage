@@ -33,5 +33,17 @@ namespace NCoreUtils.Storage.Integration
 
         [Fact]
         public override void CreateRecordInSubfolderWithDelete() => base.CreateRecordInSubfolderWithDelete();
+
+        [Fact]
+        public override void UploadAndRename() => base.UploadAndRename();
+
+        [Fact]
+        public override void Root() => base.Root();
+
+        [Fact]
+        public override void NonSeekableStream() => base.NonSeekableStream();
+
+        [Fact]
+        public override void Permissions() => base.Permissions();
     }
 }

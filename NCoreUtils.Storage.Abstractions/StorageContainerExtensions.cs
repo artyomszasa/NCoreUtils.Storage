@@ -25,7 +25,7 @@ namespace NCoreUtils.Storage
             IProgress progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (var buffer = new MemoryStream(data, false))
+            using (var buffer = new MemoryStream(data, 0, data.Length, false, true))
             {
                 return await storageContainer.CreateRecordAsync(name, buffer, contentType, progress, cancellationToken).ConfigureAwait(false);
             }

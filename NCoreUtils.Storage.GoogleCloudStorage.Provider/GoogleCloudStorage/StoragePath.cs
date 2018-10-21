@@ -8,11 +8,11 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
     {
         IStorageRoot IStoragePath.StorageRoot => StorageRoot;
 
-        public StorageRoot StorageRoot { get; }
+        public StorageRoot StorageRoot { get; internal set; }
 
-        public Uri Uri => new Uri(StorageRoot.Uri, LocalPath);
+        public virtual Uri Uri => new Uri(StorageRoot.Uri, LocalPath);
 
-        public string Name => System.IO.Path.GetFileName(LocalPath);
+        public virtual string Name => System.IO.Path.GetFileName(LocalPath);
 
         public string LocalPath { get; }
 
@@ -20,6 +20,11 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         {
             StorageRoot = storageRoot ?? throw new ArgumentNullException(nameof(storageRoot));
             LocalPath = localPath ?? throw new ArgumentNullException(nameof(localPath));
+        }
+
+        internal StoragePath()
+        {
+            LocalPath = "/";
         }
 
         // public virtual async Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))

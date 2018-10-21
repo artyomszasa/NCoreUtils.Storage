@@ -7,7 +7,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
     {
         public static StoragePermissions GetStoragePermissions(this ObjectAccessControl ac)
         {
-            if (StringComparer.OrdinalIgnoreCase.Equals("READ", ac.Role))
+            if (StringComparer.OrdinalIgnoreCase.Equals("READER", ac.Role))
             {
                 return StoragePermissions.Read;
             }
@@ -26,7 +26,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                 return false;
             }
             ac = new ObjectAccessControl();
-            ac.Role = permissions == StoragePermissions.Read ? "READ" : "OWNER";
+            ac.Role = permissions == StoragePermissions.Read ? "READER" : "OWNER";
             switch (actor.ActorType)
             {
                 case StorageActorType.Authenticated:

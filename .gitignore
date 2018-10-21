@@ -3,4 +3,5 @@ NCoreUtils*/obj
 .vscode
 .vs
 NCoreUtils*.Unit*/coverage.xml
+NCoreUtils*.Unit*/coverage.opencover.xml
 NCoreUtils*.Unit*/report
