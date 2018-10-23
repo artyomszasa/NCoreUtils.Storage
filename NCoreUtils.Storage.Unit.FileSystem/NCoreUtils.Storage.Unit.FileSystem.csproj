@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Resources\x.png" />
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="always" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\x.png" />

@@ -1,0 +1,6 @@
+{
+    "parallelizeTestCollections": false,
+    "shadowCopy": false,
+    "diagnosticMessages": true,
+    "methodDisplay": "method"
+}
