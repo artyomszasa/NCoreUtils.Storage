@@ -2,7 +2,7 @@ language: csharp
 solution: NCoreUtils.Storage.sln
 mono: none
 sudo: required
-dotnet: 2.1.401
+dotnet: 2.1.403
 env:
   global:
   - MSBUILDDISABLENODEREUSE=1
