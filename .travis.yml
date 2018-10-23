@@ -8,4 +8,4 @@ env:
   - MSBUILDDISABLENODEREUSE=1
 script:
   - dotnet restore NCoreUtils.Storage.Unit.FileSystem/
-  - dotnet test -c Release -f netcoreapp2.1 NCoreUtils.Storage.Unit.FileSystem/
+  - dotnet test -nodeReuse:false -c Release -f netcoreapp2.1 NCoreUtils.Storage.Unit.FileSystem
