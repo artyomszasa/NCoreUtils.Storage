@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VersionPrefix>2.0.0</VersionPrefix>
+    <Version>2.0.0-beta2</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage.Abstractions\NCoreUtils.Storage.Abstractions.csproj" />
     <ProjectReference Include="..\NCoreUtils.Storage.CacheControl\NCoreUtils.Storage.CacheControl.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
-    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.2" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.3-alpha0" />
     <PackageReference Include="NCoreUtils.Features" Version="1.1.0" />
     <PackageReference Include="NCoreUtils.Linq" Version="1.0.5" />
   </ItemGroup>
