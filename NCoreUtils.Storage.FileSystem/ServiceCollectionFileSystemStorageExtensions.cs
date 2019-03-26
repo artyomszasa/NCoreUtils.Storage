@@ -10,12 +10,12 @@ namespace NCoreUtils.Storage
         static readonly bool _isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
         public static IServiceCollection AddFileSystemStorageProvider(this IServiceCollection services)
-            => _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : throw new NotImplementedException("Windows is not yet supported.");
+            => _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : services.AddStorageProvider<WindowsStorageProvider>();
 
         public static IServiceCollection AddFileSystemStorageProvider(this IServiceCollection services, string rootPath)
         {
             services.AddSingleton(new FileSystemStorageOptions { RootPath = rootPath });
-            return _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : throw new NotImplementedException("Windows is not yet supported.");
+            return _isLinux ? services.AddStorageProvider<LinuxStorageProvider>() : services.AddStorageProvider<WindowsStorageProvider>();
         }
     }
 }
