@@ -5,7 +5,7 @@ namespace NCoreUtils.Storage.Unit
         static byte[] ReadResource(string name)
         {
             var assembly = typeof(Resources).Assembly;
-            var resourceStream = assembly.GetManifestResourceStream($"NCoreUtils.Storage.FileSystem.{name}");
+            var resourceStream = assembly.GetManifestResourceStream($"NCoreUtils.Storage.Unit.{name}");
             var result = new byte[resourceStream.Length];
             resourceStream.Read(result, 0, (int)resourceStream.Length);
             return result;

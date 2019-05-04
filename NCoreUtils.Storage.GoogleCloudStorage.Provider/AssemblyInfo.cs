@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("NCoreUtils.Storage.Unit.FileSystem")]
+[assembly: InternalsVisibleTo("NCoreUtils.Storage.Unit")]

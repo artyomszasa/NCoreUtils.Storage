@@ -1,12 +1,8 @@
+dist: xenial
 language: csharp
 solution: NCoreUtils.Storage.sln
 mono: none
-sudo: required
-dotnet: 2.2.102
-env:
-  global:
-  - MSBUILDDISABLENODEREUSE=1
+dotnet: 2.2.203
 script:
-  - dotnet restore NCoreUtils.Storage.Unit.FileSystem/
-  - dotnet build -nodeReuse:false -c Release --no-restore NCoreUtils.Storage.Unit.FileSystem/
-  - dotnet test -nodeReuse:false --no-restore --no-build -c Release -f netcoreapp2.2 NCoreUtils.Storage.Unit.FileSystem
+  - dotnet restore
+  - dotnet test -c Debug -f netcoreapp2.2 NCoreUtils.Storage.Unit

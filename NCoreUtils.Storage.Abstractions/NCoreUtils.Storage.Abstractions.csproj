@@ -9,7 +9,7 @@
     <PackageReference Include="NCoreUtils.Features.Abstractions" Version="1.1.0" />
     <PackageReference Include="NCoreUtils.Progress.Abstractions" Version="1.1.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="System.Interactive.Async" Version="3.1.1" />
+    <PackageReference Include="System.Interactive.Async" Version="3.2.0" />
   </ItemGroup>
   <!-- do nothing -->
   <Target Name="RunCoverageTests" />

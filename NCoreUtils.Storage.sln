@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCoreUtils.Storage.GoogleCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCoreUtils.Storage.CacheControl", "NCoreUtils.Storage.CacheControl\NCoreUtils.Storage.CacheControl.csproj", "{C25A8536-ACA8-42DA-B845-1FCD18F17B08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCoreUtils.Storage.Unit.FileSystem", "NCoreUtils.Storage.Unit.FileSystem\NCoreUtils.Storage.Unit.FileSystem.csproj", "{03BD6017-5C19-4D41-A645-6771F82D0C98}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCoreUtils.Storage.Unit", "NCoreUtils.Storage.Unit\NCoreUtils.Storage.Unit.csproj", "{03BD6017-5C19-4D41-A645-6771F82D0C98}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCoreUtils.Storage.Integration", "NCoreUtils.Storage.Integration\NCoreUtils.Storage.Integration.csproj", "{2B622F07-CF60-4DF1-B842-5F0C6F649EEF}"
 EndProject
