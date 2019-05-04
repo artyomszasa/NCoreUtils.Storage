@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>2.0.1-beta2</Version>
+    <Version>2.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage.Abstractions\NCoreUtils.Storage.Abstractions.csproj" />
