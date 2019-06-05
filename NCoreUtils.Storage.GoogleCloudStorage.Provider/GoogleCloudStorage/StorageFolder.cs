@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Cloud.Storage.V1;
-using NCoreUtils.Linq;
 using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage.GoogleCloudStorage
@@ -30,7 +29,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             => StorageRoot.CreateRecordAsync($"{LocalPath}/{name}", contents, contentType, progress, cancellationToken);
 
         public IAsyncEnumerable<StorageItem> GetContentsAsync()
-            => DelayedAsyncEnumerable.Delay(cancellationToken => StorageRoot.GetContentsAsync(LocalPath, cancellationToken));
+            => Internal.AsyncEnumerable.FromCancellable<StorageItem>(cancellationToken => StorageRoot.EnumerateContentsAsync(LocalPath, cancellationToken));
 
         public override Task UpdateSecurityAsync(IStorageSecurity security, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {

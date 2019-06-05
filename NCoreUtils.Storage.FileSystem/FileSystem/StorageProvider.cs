@@ -28,7 +28,8 @@ namespace NCoreUtils.Storage.FileSystem
 
         protected internal abstract Task<StoragePath> ResolvePathAsync(string absolutePath, CancellationToken cancellationToken);
 
-        public IAsyncEnumerable<IStorageRoot> GetRootsAsync() => GetFileSystemRoots().ToAsyncEnumerable();
+        public IAsyncEnumerable<IStorageRoot> GetRootsAsync()
+            => new Internal.AsAsyncEnumerable<IStorageRoot>(GetFileSystemRoots());
 
         public async Task<IStoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
             => uri.Scheme == "file" ? await ResolvePathAsync(uri.AbsolutePath, cancellationToken) : null;

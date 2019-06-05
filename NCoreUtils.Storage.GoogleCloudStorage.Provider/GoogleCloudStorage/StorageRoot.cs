@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Upload;
 using Google.Cloud.Storage.V1;
-using NCoreUtils.Linq;
 using NCoreUtils.Progress;
 using GoogleObject = Google.Apis.Storage.v1.Data.Object;
 using GoogleObjectAccessControl = Google.Apis.Storage.v1.Data.ObjectAccessControl;
@@ -55,49 +55,61 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             => await CreateRecordAsync(name, contents, contentType, progress, cancellationToken);
 
 
-        protected internal virtual Task<IAsyncEnumerable<StorageItem>> GetContentsAsync(string localName, CancellationToken cancellationToken)
+        internal async IAsyncEnumerable<StorageItem> EnumerateContentsAsync(string localName, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            return UseStorageClient(client =>
+            await using var entry = await UseStorageClient();
+            var name = localName?.Trim('/');
+            var responses = entry.Client.ListObjectsAsync(BucketName, string.IsNullOrEmpty(name) ? name : name + '/', _delimiterOptions)
+                .AsRawResponses();
+            using (var responseEnumerator = responses.GetEnumerator())
             {
-                var name = localName?.Trim('/');
-                var results = client.ListObjectsAsync(BucketName, string.IsNullOrEmpty(name) ? name : name + '/', _delimiterOptions)
-                    .AsRawResponses()
-                    .SelectMany(response =>
+                while (await responseEnumerator.MoveNext(cancellationToken))
+                {
+                    var response = responseEnumerator.Current;
+                    if (null != response.Prefixes)
                     {
-                        var folders = null == response.Prefixes
-                            ? Enumerable.Empty<StorageItem>()
-                            : response.Prefixes
-                                .Select(prefix => (StorageItem)new StorageFolder(this, prefix));
-                        var records = null == response.Items
-                            ? Enumerable.Empty<StorageItem>()
-                            : response.Items
-                                .Select(googleObject => (StorageItem)new StorageRecord(this, googleObject.Name, googleObject));
-                        return folders.Concat(records).ToAsyncEnumerable();
-                    });
-                return Task.FromResult(results);
-            });
+                        foreach (var prefix in response.Prefixes)
+                        {
+                            yield return new StorageFolder(this, prefix);
+                        }
+                    }
+                    if (null != response.Items)
+                    {
+                        foreach (var googleObject in response.Items)
+                        {
+                            yield return new StorageRecord(this, googleObject.Name, googleObject);
+                        }
+                    }
+                }
+            }
+        }
+
+        // protected internal virtual Task<IAsyncEnumerable<StorageItem>> GetContentsAsync(string localName, CancellationToken cancellationToken)
+        // {
+        //     return Task.FromResult(EnumerateContentsAsync(localName, cancellationToken));
+        // }
+
+        async IAsyncEnumerable<StorageRecord> RecursiveCollectObjectsAsync(string localPath, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await foreach (var item in EnumerateContentsAsync(localPath, cancellationToken).WithCancellation(cancellationToken))
+            {
+                switch (item)
+                {
+                    case StorageRecord record:
+                        yield return record;
+                        break;
+                    case StorageFolder folder:
+                        await foreach (var subitem in RecursiveCollectObjectsAsync(folder.LocalPath).WithCancellation(cancellationToken))
+                        {
+                            yield return subitem;
+                        }
+                        break;
+                }
+            }
         }
 
         protected virtual IAsyncEnumerable<StorageRecord> RecursiveCollectObjectsAsync(string localPath)
-        {
-            return DelayedAsyncEnumerable.Delay(async cancellationToken =>
-            {
-                var contents = await GetContentsAsync(localPath, cancellationToken).ConfigureAwait(false);
-                return contents
-                    .SelectMany(item =>
-                    {
-                        switch (item)
-                        {
-                            case StorageRecord record:
-                                return new [] { record }.ToAsyncEnumerable();
-                            case StorageFolder folder:
-                                return RecursiveCollectObjectsAsync(folder.LocalPath);
-                            default:
-                                return new StorageRecord[0].ToAsyncEnumerable();
-                        }
-                    });
-            });
-        }
+            => Internal.AsyncEnumerable.FromCancellable(cancellationToken => RecursiveCollectObjectsAsync(localPath, cancellationToken));
 
         internal StorageSecurity GetPermissions(GoogleObject obj)
         {
@@ -138,6 +150,8 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                 }
             }
         }
+
+        public ValueTask<StorageProvider.StorageClientEntry> UseStorageClient() => StorageProvider.UseStorageClient();
 
         public Task UseStorageClient(Func<StorageClient, Task> action) => StorageProvider.UseStorageClient(action);
 
@@ -263,7 +277,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
                     progress.SetValue(1);
                     break;
                 case StorageFolder folder:
-                    var records = await RecursiveCollectObjectsAsync(folder.LocalPath).ToList(cancellationToken).ConfigureAwait(false);
+                    var records = await Internal.AsyncEnumerable.ToList(RecursiveCollectObjectsAsync(folder.LocalPath), cancellationToken).ConfigureAwait(false);
                     cancellationToken.ThrowIfCancellationRequested();
                     progress.SetTotal(records.Count);
                     await UseStorageClient(async client =>
@@ -316,7 +330,7 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         }
 
         public IAsyncEnumerable<IStorageItem> GetContentsAsync()
-            => DelayedAsyncEnumerable.Delay(cancellationToken => GetContentsAsync(null, cancellationToken));
+            => Internal.AsyncEnumerable.FromCancellable(cancellationToken => EnumerateContentsAsync(null, cancellationToken));
 
         public virtual Task<StorageRecord> RenameAsync(StorageRecord record, string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {

@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NCoreUtils.ContentDetection;
 using NCoreUtils.Features;
-using NCoreUtils.Linq;
 using NCoreUtils.Storage.Features;
 using StorageClient = Google.Cloud.Storage.V1.StorageClient;
 
@@ -18,22 +18,48 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
     public class StorageProvider : IStorageProvider
     {
         [ExcludeFromCodeCoverage]
-        sealed class ClientPool
+        internal sealed class ClientPool
         {
             readonly ConcurrentQueue<StorageClient> _queue = new ConcurrentQueue<StorageClient>();
 
             [ExcludeFromCodeCoverage]
-            public Task<StorageClient> GetAsync()
+            public ValueTask<StorageClient> GetAsync()
             {
                 if (_queue.TryDequeue(out var client))
                 {
-                    return Task.FromResult(client);
+                    return new ValueTask<StorageClient>(client);
                 }
-                return StorageClient.CreateAsync();
+                return new ValueTask<StorageClient>(StorageClient.CreateAsync());
             }
 
             [ExcludeFromCodeCoverage]
             public void Return(StorageClient client) => _queue.Enqueue(client);
+        }
+
+        [ExcludeFromCodeCoverage]
+        public sealed class StorageClientEntry : IAsyncDisposable
+        {
+            readonly ClientPool _pool;
+
+            StorageClient _client;
+
+            public StorageClient Client =>  _client;
+
+            internal StorageClientEntry(ClientPool pool, StorageClient client)
+            {
+                _pool = pool;
+                _client = client;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                var client = Interlocked.Exchange(ref _client, null);
+                if (null != client)
+                {
+                    _pool.Return(client);
+                }
+                return default;
+            }
         }
 
         private ClientPool _pool = new ClientPool();
@@ -100,10 +126,25 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
         }
 
         [ExcludeFromCodeCoverage]
-        internal virtual Task<StorageClient> GetPooledStorageClientAsync() => _pool.GetAsync();
+        internal virtual ValueTask<StorageClient> GetPooledStorageClientAsync() => _pool.GetAsync();
 
         [ExcludeFromCodeCoverage]
         internal virtual void ReturnPooledStorageClientAsync(StorageClient client) => _pool.Return(client);
+
+        async Task<StorageClientEntry> CreateEntryAsync(Task<StorageClient> client)
+        {
+            return new StorageClientEntry(_pool, await client);
+        }
+
+        public ValueTask<StorageClientEntry> UseStorageClient()
+        {
+            var client = GetPooledStorageClientAsync();
+            if (client.IsCompleted)
+            {
+                return new ValueTask<StorageClientEntry>(new StorageClientEntry(_pool, client.Result));
+            }
+            return new ValueTask<StorageClientEntry>(CreateEntryAsync(client.AsTask()));
+        }
 
         public async Task UseStorageClient(Func<StorageClient, Task> action)
         {
@@ -131,17 +172,23 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             }
         }
 
-        public virtual IAsyncEnumerable<StorageRoot> GetRootsAsync()
+        async IAsyncEnumerable<StorageRoot> GetRootsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            return DelayedAsyncEnumerable.Delay(async cancellationToken =>
+            await using (var entry = await UseStorageClient())
             {
-                var client = await GetPooledStorageClientAsync().ConfigureAwait(false);
-                var results = client.ListBucketsAsync(Options.ProjectId)
-                    .Select(bucket => new StorageRoot(this, bucket.Name))
-                    .Finally(() => ReturnPooledStorageClientAsync(client));
-                return results;
-            });
+                var buckerEnumerable = entry.Client.ListBucketsAsync(Options.ProjectId);
+                using (var bucketEnumerator = buckerEnumerable.GetEnumerator())
+                {
+                    while (await bucketEnumerator.MoveNext(cancellationToken))
+                    {
+                        yield return new StorageRoot(this, bucketEnumerator.Current.Name);
+                    }
+                }
+            }
         }
+
+        public virtual IAsyncEnumerable<StorageRoot> GetRootsAsync()
+            => Internal.AsyncEnumerable.FromCancellable(GetRootsAsync);
 
         public virtual Task<StoragePath> ResolveAsync(Uri uri, CancellationToken cancellationToken = default(CancellationToken))
         {

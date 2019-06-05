@@ -1,3 +1,4 @@
+extern alias reactive;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,6 +19,37 @@ namespace NCoreUtils.Storage.Unit
 {
     public class FakeGoogleClient : StorageClient
     {
+        sealed class AsReactiveEnumerator<T> : reactive::System.Collections.Generic.IAsyncEnumerator<T>
+        {
+            readonly IEnumerator<T> _source;
+
+            public AsReactiveEnumerator(IEnumerator<T> source)
+            {
+                _source = source;
+            }
+
+            public T Current => _source.Current;
+
+            public void Dispose() => _source.Dispose();
+
+            public Task<bool> MoveNext(CancellationToken cancellationToken)
+                => Task.FromResult(_source.MoveNext());
+        }
+
+        sealed class AsReactiveEnumerable<T> : reactive::System.Collections.Generic.IAsyncEnumerable<T>
+        {
+            readonly IEnumerable<T> _source;
+
+            public AsReactiveEnumerable(IEnumerable<T> source)
+            {
+                _source = source ?? throw new ArgumentNullException(nameof(source));
+            }
+            public reactive::System.Collections.Generic.IAsyncEnumerator<T> GetEnumerator()
+            {
+                return new AsReactiveEnumerator<T>(_source.GetEnumerator());
+            }
+        }
+
         sealed class FakePagedEnumerable<TResponse, TResource> : PagedEnumerable<TResponse, TResource>
         {
             readonly TResponse[] _responses;
@@ -49,9 +81,9 @@ namespace NCoreUtils.Storage.Unit
                 _extract = extract;
             }
 
-            public override IAsyncEnumerable<TResponse> AsRawResponses() => _responses.ToAsyncEnumerable();
+            public override reactive::System.Collections.Generic.IAsyncEnumerable<TResponse> AsRawResponses() => new AsReactiveEnumerable<TResponse>(_responses);
 
-            public override IAsyncEnumerator<TResource> GetEnumerator() => _responses.SelectMany(_extract).ToAsyncEnumerable().GetEnumerator();
+            public override reactive::System.Collections.Generic.IAsyncEnumerator<TResource> GetEnumerator() => new AsReactiveEnumerable<TResource>(_responses.SelectMany(_extract)).GetEnumerator();
 
             public override Task<Page<TResource>> ReadPageAsync(int pageSize, CancellationToken cancellationToken = default(CancellationToken))
                 => Task.FromResult(new Page<TResource>(_responses.SelectMany(_extract).ToArray(), null));

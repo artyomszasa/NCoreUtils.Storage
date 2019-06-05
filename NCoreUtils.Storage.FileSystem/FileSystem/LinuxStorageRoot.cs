@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mono.Unix.Native;
 using NCoreUtils.ContentDetection;
-using NCoreUtils.Linq;
 
 namespace NCoreUtils.Storage.FileSystem
 {

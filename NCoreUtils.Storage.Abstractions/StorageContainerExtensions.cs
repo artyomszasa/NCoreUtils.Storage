@@ -9,7 +9,21 @@ namespace NCoreUtils.Storage
 {
     public static class StorageContainerExtensions
     {
-        public static IEnumerable<IStorageItem> GetContents(this IStorageContainer storageContainer) => storageContainer.GetContentsAsync().ToEnumerable();
+        public static IEnumerable<IStorageItem> GetContents(this IStorageContainer storageContainer)
+        {
+            var enumerator = storageContainer.GetContentsAsync().GetAsyncEnumerator();
+            try
+            {
+                while (enumerator.MoveNextAsync().AsTask().Result)
+                {
+                    yield return enumerator.Current;
+                }
+            }
+            finally
+            {
+                enumerator.DisposeAsync().AsTask().Wait();
+            }
+        }
 
         public static IStorageRecord CreateRecord(this IStorageContainer storageContainer, string name, Stream contents, string contentType = null, IProgress progress = null)
             => storageContainer.CreateRecordAsync(name, contents, contentType, progress).GetAwaiter().GetResult();

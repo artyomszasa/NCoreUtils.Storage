@@ -147,7 +147,7 @@ namespace NCoreUtils.Storage.FileSystem
                 Assert.Equal(data.Length, fileInfo.Length);
                 Assert.Equal((IEnumerable<byte>)data, File.ReadAllBytes(fileInfo.FullName));
                 // CHECK STORAGE RECORD
-                var subitems = await testFolder.GetContentsAsync().ToList();
+                var subitems = await Internal.AsyncEnumerable.ToList(testFolder.GetContentsAsync(), CancellationToken.None);
                 Assert.Equal(Directory.GetFileSystemEntries(testFolderPath).Length, subitems.Count);
                 var checkRecord = subitems.OfType<IStorageRecord>().FirstOrDefault(rec => rec.Name == "x.png");
                 Assert.NotNull(checkRecord);
@@ -160,7 +160,7 @@ namespace NCoreUtils.Storage.FileSystem
                 await Assert.ThrowsAsync<FileNotFoundException>(() => record.DeleteAsync());
                 // CHECK FS
                 Assert.False(File.Exists(fileFullPath));
-                var subitems1 = await testFolder.GetContentsAsync().ToList();
+                var subitems1 = await Internal.AsyncEnumerable.ToList(testFolder.GetContentsAsync(), CancellationToken.None);
                 Assert.Equal(Directory.GetFileSystemEntries(testFolderPath).Length, subitems1.Count);
                 // CHECK STORAGE
                 var noRecord = await record.GetStorageProvider().ResolveAsync(record.Uri);
@@ -182,7 +182,7 @@ namespace NCoreUtils.Storage.FileSystem
                 var dirInfo = new DirectoryInfo(folderFullPath);
                 Assert.True(dirInfo.Exists);
                 // CHECK STORAGE FOLDER
-                var subitems = await testFolder.GetContentsAsync().ToList();
+                var subitems = await Internal.AsyncEnumerable.ToList(testFolder.GetContentsAsync(), CancellationToken.None);
                 Assert.Equal(Directory.GetFileSystemEntries(testFolderPath).Length, subitems.Count);
                 var checkFolder = subitems.OfType<IStorageFolder>().FirstOrDefault(rec => rec.Name == "folder");
                 Assert.NotNull(checkFolder);
@@ -193,7 +193,7 @@ namespace NCoreUtils.Storage.FileSystem
                 await Assert.ThrowsAsync<DirectoryNotFoundException>(() => folder.DeleteAsync());
                 // CHECK FS
                 Assert.False(Directory.Exists(folderFullPath));
-                var subitems1 = await testFolder.GetContentsAsync().ToList();
+                var subitems1 = await Internal.AsyncEnumerable.ToList(testFolder.GetContentsAsync(), CancellationToken.None);
                 Assert.Equal(Directory.GetFileSystemEntries(testFolderPath).Length, subitems1.Count);
                 // CHECK STORAGE
                 var noFolder = await folder.GetStorageProvider().ResolveAsync(folder.Uri);

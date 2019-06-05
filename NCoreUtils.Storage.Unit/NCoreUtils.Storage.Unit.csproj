@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>NCoreUtils.Storage.Unit</RootNamespace>
   </PropertyGroup>
@@ -28,6 +28,14 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\x.png" />
   </ItemGroup>
+  <Target Name="AddAssemblyAliasToReactiveAsync"
+          AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'System.Interactive.Async'">
+        <Aliases>reactive</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
   <Target Name="RunCoverageTests">
     <PropertyGroup>
       <ReportGeneratorPaths>$([System.IO.Directory]::GetFiles($(NuGetPackageRoot), "ReportGenerator.exe", System.IO.SearchOption.AllDirectories))</ReportGeneratorPaths>

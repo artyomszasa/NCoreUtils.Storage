@@ -28,7 +28,21 @@ namespace NCoreUtils.Storage
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
         }
 
-        public static IEnumerable<IStorageRoot> GetRoots(this IStorageProvider storageProvider) => storageProvider.GetRootsAsync().ToEnumerable();
+        public static IEnumerable<IStorageRoot> GetRoots(this IStorageProvider storageProvider)
+        {
+            var enumerator = storageProvider.GetRootsAsync().GetAsyncEnumerator();
+            try
+            {
+                while (enumerator.MoveNextAsync().AsTask().Result)
+                {
+                    yield return enumerator.Current;
+                }
+            }
+            finally
+            {
+                enumerator.DisposeAsync().AsTask().Wait();
+            }
+        }
 
         public static IStoragePath Resolve(this IStorageProvider storageProvider, Uri uri) => storageProvider.ResolveAsync(uri).GetAwaiter().GetResult();
 

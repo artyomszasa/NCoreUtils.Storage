@@ -21,8 +21,8 @@ namespace NCoreUtils.Storage.Unit
             _fakeClient = fakeClient;
         }
 
-        internal override Task<StorageClient> GetPooledStorageClientAsync()
-            => Task.FromResult<StorageClient>(_fakeClient);
+        internal override ValueTask<StorageClient> GetPooledStorageClientAsync()
+            => new ValueTask<StorageClient>(_fakeClient);
 
         internal override void ReturnPooledStorageClientAsync(StorageClient _) { }
     }

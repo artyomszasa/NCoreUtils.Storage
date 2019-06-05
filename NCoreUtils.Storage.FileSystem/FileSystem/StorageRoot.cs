@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NCoreUtils.ContentDetection;
-using NCoreUtils.Linq;
 using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage.FileSystem
@@ -83,11 +83,17 @@ namespace NCoreUtils.Storage.FileSystem
             }
         }
 
+        async IAsyncEnumerable<IStorageItem> GetContentsAsync(FsPath localPath, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            foreach (var path in GetFileSystemEntries(localPath))
+            {
+                var item = await StorageProvider.ResolvePathAsync(path, cancellationToken);
+                yield return (IStorageItem)item;
+            }
+        }
+
         internal IAsyncEnumerable<IStorageItem> GetContentsAsync(FsPath localPath)
-            => GetFileSystemEntries(localPath)
-                .ToAsyncEnumerable()
-                .SelectAsync((path, cancellationToken) => StorageProvider.ResolvePathAsync(path, cancellationToken))
-                .Select(boxed => (IStorageItem)boxed);
+            => Internal.AsyncEnumerable.FromCancellable(cancellationToken => GetContentsAsync(localPath, cancellationToken));
 
         internal abstract StorageSecurity GetSecurity(string absolutePath);
 
