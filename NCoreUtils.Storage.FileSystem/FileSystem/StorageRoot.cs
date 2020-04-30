@@ -11,26 +11,24 @@ using NCoreUtils.Progress;
 
 namespace NCoreUtils.Storage.FileSystem
 {
-    public abstract class StorageRoot : IStorageRoot
+    public abstract class StorageRoot : StoragePath, IStorageRoot
     {
         public const int CopyBufferSize = 8192;
 
         IStorageProvider IStorageRoot.StorageProvider => StorageProvider;
 
-        IStorageRoot IStoragePath.StorageRoot => this;
-
-        public ILogger Logger => StorageProvider.Logger;
-
         public IContentAnalyzer ContentAnalyzer => StorageProvider.ContentAnalyzer;
 
         public StorageProvider StorageProvider { get; }
 
-        public abstract Uri Uri { get; }
-
-        public abstract string Name { get; }
+        public override ILogger Logger => StorageProvider.Logger;
 
         public StorageRoot(StorageProvider storageProvider)
-            => StorageProvider = storageProvider ?? throw new System.ArgumentNullException(nameof(storageProvider));
+            : base()
+        {
+            _storageRoot = this;
+            StorageProvider = storageProvider ?? throw new System.ArgumentNullException(nameof(storageProvider));
+        }
 
         internal virtual async Task<IStorageRecord> CreateRecordAsync(FsPath localPath, Stream contents, string contentType, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -201,7 +199,7 @@ namespace NCoreUtils.Storage.FileSystem
         public virtual Task<IStorageFolder> CreateFolderAsync(string name, IProgress progress = null, CancellationToken cancellationToken = default(CancellationToken))
             => CreateFolderAsync(FsPath.Parse(name), progress, cancellationToken);
 
-        public virtual Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public override Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
             => Task.FromResult<IStoragePath>(null);
     }
 }

@@ -50,7 +50,7 @@ namespace NCoreUtils.Storage.FileSystem
             return new StorageSecurity(builder.ToImmutable());
         }
 
-        public override string GetUriPath(FsPath localPath) => RootPath.TrimStart('/') + localPath.Join("/");
+        public override string GetUriPath(FsPath localPath) => localPath.Join("/");
 
         public override string GetFullPath(FsPath localPath) => RootPath + localPath.Join("/");
 

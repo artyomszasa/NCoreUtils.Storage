@@ -29,6 +29,10 @@ namespace NCoreUtils.Storage.FileSystem
         protected internal override async Task<StoragePath> ResolvePathAsync(string absolutePath, CancellationToken cancellationToken)
         {
             var path = absolutePath.Trim('/');
+            if (string.IsNullOrEmpty(path))
+            {
+                return _linuxStorageRoot;
+            }
             var fsPath = _linuxStorageRoot.RootPath + path;
             var localPath = FsPath.Parse(path);
             if (Directory.Exists(fsPath))

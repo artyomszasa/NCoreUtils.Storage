@@ -78,7 +78,7 @@ namespace NCoreUtils.Storage
             {
                 case null:
                     throw new InvalidOperationException($"Unable to resolve parent of {path.Uri}.");
-                case IStorageFolder folder:
+                case IStorageContainer folder:
                     return await folder.CreateFolderAsync(path.Name, progress, cancellationToken);
                 case IStorageRecord _:
                     throw new InvalidOperationException($"Parent of {path.Uri} is a storage record.");
@@ -120,7 +120,7 @@ namespace NCoreUtils.Storage
             {
                 case null:
                     throw new InvalidOperationException($"Unable to resolve parent of {path.Uri}.");
-                case IStorageFolder folder:
+                case IStorageContainer folder:
                     return await folder.CreateRecordAsync(path.Name, contents, contentType, progress, cancellationToken);
                 case IStorageRecord _:
                     throw new InvalidOperationException($"Parent of {path.Uri} is a storage record.");

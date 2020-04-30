@@ -7,30 +7,51 @@ namespace NCoreUtils.Storage.FileSystem
 {
     public class StoragePath : IStoragePath
     {
+        internal StorageRoot _storageRoot;
+
         IStorageRoot IStoragePath.StorageRoot => StorageRoot;
 
-        public StorageRoot StorageRoot { get; }
+        public virtual StorageRoot StorageRoot => _storageRoot;
 
         /// <summary>
         /// Path relative to the root. Does not include root drive/folder.
         /// </summary>
         public FsPath LocalPath { get; }
 
-        public string Name => LocalPath.Name;
+        public virtual string Name => LocalPath.Name;
 
-        public ILogger Logger => StorageRoot.Logger;
+        public virtual ILogger Logger => StorageRoot.Logger;
+
+        internal StoragePath()
+        {
+            LocalPath = FsPath.Empty;
+        }
 
         public StoragePath(StorageRoot storageRoot, FsPath localPath)
         {
-            StorageRoot = storageRoot ?? throw new ArgumentNullException(nameof(storageRoot));
+            _storageRoot = storageRoot ?? throw new ArgumentNullException(nameof(storageRoot));
             LocalPath = localPath ?? throw new ArgumentNullException(nameof(localPath));
         }
 
-        public Uri Uri => new UriBuilder { Scheme = "file", Host = string.Empty, Path = StorageRoot.GetUriPath(this) }.Uri;
+        public virtual Uri Uri
+        {
+            get
+            {
+                var builder = new UriBuilder
+                {
+                    Scheme = "file",
+                    Host = string.Empty,
+                    Path = StorageRoot.GetUriPath(this)
+                };
+                return builder.Uri;
+            }
+        }
 
         public virtual async Task<IStoragePath> GetParentAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await StorageRoot.StorageProvider.ResolvePathAsync(System.IO.Path.GetDirectoryName(StorageRoot.GetFullPath(LocalPath)), cancellationToken);
+            var parentLocalPath = LocalPath.SubPath(-1);
+            var parentRelativePath = StorageRoot.GetUriPath(parentLocalPath);
+            return await StorageRoot.StorageProvider.ResolvePathAsync(parentRelativePath, cancellationToken);
         }
     }
 }
