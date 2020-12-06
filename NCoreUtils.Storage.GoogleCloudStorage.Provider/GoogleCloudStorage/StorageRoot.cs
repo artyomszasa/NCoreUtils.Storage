@@ -61,24 +61,20 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             var name = localName?.Trim('/');
             var responses = entry.Client.ListObjectsAsync(BucketName, string.IsNullOrEmpty(name) ? name : name + '/', _delimiterOptions)
                 .AsRawResponses();
-            using (var responseEnumerator = responses.GetEnumerator())
+            await foreach (var response in responses)
             {
-                while (await responseEnumerator.MoveNext(cancellationToken))
+                if (null != response.Prefixes)
                 {
-                    var response = responseEnumerator.Current;
-                    if (null != response.Prefixes)
+                    foreach (var prefix in response.Prefixes)
                     {
-                        foreach (var prefix in response.Prefixes)
-                        {
-                            yield return new StorageFolder(this, prefix);
-                        }
+                        yield return new StorageFolder(this, prefix);
                     }
-                    if (null != response.Items)
+                }
+                if (null != response.Items)
+                {
+                    foreach (var googleObject in response.Items)
                     {
-                        foreach (var googleObject in response.Items)
-                        {
-                            yield return new StorageRecord(this, googleObject.Name, googleObject);
-                        }
+                        yield return new StorageRecord(this, googleObject.Name, googleObject);
                     }
                 }
             }

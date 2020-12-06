@@ -177,12 +177,9 @@ namespace NCoreUtils.Storage.GoogleCloudStorage
             await using (var entry = await UseStorageClient())
             {
                 var buckerEnumerable = entry.Client.ListBucketsAsync(Options.ProjectId);
-                using (var bucketEnumerator = buckerEnumerable.GetEnumerator())
+                await foreach (var bucket in buckerEnumerable)
                 {
-                    while (await bucketEnumerator.MoveNext(cancellationToken))
-                    {
-                        yield return new StorageRoot(this, bucketEnumerator.Current.Name);
-                    }
+                    yield return new StorageRoot(this, bucket.Name);
                 }
             }
         }
