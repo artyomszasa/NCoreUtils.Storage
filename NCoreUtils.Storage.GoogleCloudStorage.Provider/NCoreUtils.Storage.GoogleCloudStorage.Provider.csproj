@@ -15,7 +15,7 @@
     <PackageReference Include="NCoreUtils.ContentDetection.Abstractions" Version="1.1.3" />
     <PackageReference Include="NCoreUtils.Features" Version="1.1.0" />
     <PackageReference Include="NCoreUtils.Linq" Version="1.0.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
   <!-- do nothing -->
   <Target Name="RunCoverageTests" />
