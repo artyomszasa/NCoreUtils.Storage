@@ -171,7 +171,7 @@ namespace NCoreUtils.Storage.FileSystem
             CancellationToken cancellationToken = default) where T : IStorageItem
         {
             var path = GetFullPath(subpath);
-            var folder = Path.GetDirectoryName(path);
+            var folder = Path.GetDirectoryName(path) ?? throw new InvalidOperationException($"No containing folder exists for \"{path}\".");
             var newPath = Path.Combine(folder, name);
             if (new FileInfo(path).Attributes.HasFlag(FileAttributes.Directory))
             {

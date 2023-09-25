@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>net7.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>NCoreUtils.Storage.GoogleCloudStorage</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NCoreUtils.Extensions.Google.Cloud.Storage" Version="3.1.2" />
-    <PackageReference Include="NCoreUtils.Maybe" Version="1.0.5" />
+    <PackageReference Include="NCoreUtils.Extensions.Google.Cloud.Storage" Version="7.0.0.2" />
+    <PackageReference Include="NCoreUtils.Maybe" Version="3.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NCoreUtils.Storage.Abstractions\NCoreUtils.Storage.Abstractions.csproj" />

@@ -9,6 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable CA1416
+
 namespace NCoreUtils.Storage.FileSystem
 {
     public class WinStorageDriver : FileSystemStorageDriver
@@ -80,7 +82,7 @@ namespace NCoreUtils.Storage.FileSystem
 
         public override void UpdateAcl(string path, IStorageSecurity? acl)
         {
-            if (!(acl is null))
+            if (acl is not null)
             {
                 var sec = new FileSecurity(path, AccessControlSections.All);
                 foreach (var (actor, permissions) in acl)
@@ -97,3 +99,5 @@ namespace NCoreUtils.Storage.FileSystem
         }
     }
 }
+
+#pragma warning restore CA1416

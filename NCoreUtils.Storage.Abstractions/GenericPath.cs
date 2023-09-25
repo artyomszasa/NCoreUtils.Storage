@@ -130,11 +130,11 @@ namespace NCoreUtils
             }
         }
 
-        public ref struct StringEnumerable
+        public readonly ref struct StringEnumerable
         {
             private readonly Ref<GenericPath> _source;
 
-            public StringEnumerable(ref GenericPath path)
+            public StringEnumerable(scoped ref GenericPath path)
             {
                 _source = new Ref<GenericPath>(ref path);
             }

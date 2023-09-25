@@ -2,7 +2,7 @@ using System;
 
 namespace NCoreUtils.Storage
 {
-    public struct StorageActor : IEquatable<StorageActor>
+    public readonly struct StorageActor : IEquatable<StorageActor>
     {
         public static StorageActor Public { get; } = new StorageActor(StorageActorType.Public, null);
 
@@ -16,7 +16,7 @@ namespace NCoreUtils.Storage
             }
             if (string.IsNullOrEmpty(id))
             {
-                throw new System.ArgumentException("User id must be non empty string", nameof(id));
+                throw new ArgumentException("User id must be non empty string", nameof(id));
             }
             return new StorageActor(StorageActorType.User, id);
         }
@@ -29,7 +29,7 @@ namespace NCoreUtils.Storage
             }
             if (string.IsNullOrEmpty(id))
             {
-                throw new System.ArgumentException("Group id must be non empty string", nameof(id));
+                throw new ArgumentException("Group id must be non empty string", nameof(id));
             }
             return new StorageActor(StorageActorType.Group, id);
         }
@@ -56,22 +56,17 @@ namespace NCoreUtils.Storage
 
         public bool Equals(StorageActor other)
         {
-            switch (ActorType)
+            return ActorType switch
             {
-                case StorageActorType.Public:
-                    return other.ActorType == StorageActorType.Public;
-                case StorageActorType.Authenticated:
-                    return other.ActorType == StorageActorType.Authenticated;
-                case StorageActorType.User:
-                    return other.ActorType == StorageActorType.User && Id == other.Id;
-                case StorageActorType.Group:
-                    return other.ActorType == StorageActorType.Group && Id == other.Id;
-                default:
-                    return false;
-            }
+                StorageActorType.Public => other.ActorType == StorageActorType.Public,
+                StorageActorType.Authenticated => other.ActorType == StorageActorType.Authenticated,
+                StorageActorType.User => other.ActorType == StorageActorType.User && Id == other.Id,
+                StorageActorType.Group => other.ActorType == StorageActorType.Group && Id == other.Id,
+                _ => false,
+            };
         }
 
-        public override bool Equals(object obj) => obj is StorageActor other && Equals(other);
+        public override bool Equals(object? obj) => obj is StorageActor other && Equals(other);
 
         public override int GetHashCode()
         {

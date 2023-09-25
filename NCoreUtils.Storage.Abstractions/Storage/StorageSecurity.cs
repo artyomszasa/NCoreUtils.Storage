@@ -60,7 +60,7 @@ namespace NCoreUtils.Storage
             return true;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => Equals(obj as IStorageSecurity);
 
         public override int GetHashCode()

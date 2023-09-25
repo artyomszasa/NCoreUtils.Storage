@@ -22,7 +22,7 @@ namespace NCoreUtils
                     services.AddSingleton<CompositeStoreageDriver>(serviceProvider =>
                     {
                         var drivers = builder._drivers
-                            .Select(driverType => (IStorageDriver)serviceProvider.GetService(driverType))
+                            .Select(driverType => (IStorageDriver)serviceProvider.GetService(driverType)!)
                             .ToArray();
                         return new CompositeStoreageDriver(drivers);
                     });
