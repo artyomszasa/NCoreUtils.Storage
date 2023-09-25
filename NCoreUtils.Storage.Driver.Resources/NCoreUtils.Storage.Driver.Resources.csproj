@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>NCoreUtils.Storage.Resources</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NCoreUtils.Storage.Abstractions\NCoreUtils.Storage.Abstractions.csproj" />
+    <ProjectReference Include="..\NCoreUtils.Storage.Driver.FileProviders\NCoreUtils.Storage.Driver.FileProviders.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.11" />
+  </ItemGroup>
+</Project>

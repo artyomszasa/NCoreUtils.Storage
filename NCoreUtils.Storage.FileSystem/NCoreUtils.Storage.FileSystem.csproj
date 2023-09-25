@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>NCoreUtils.Storage</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NCoreUtils.Storage.Driver.FileSystem\NCoreUtils.Storage.Driver.FileSystem.csproj" />
+    <ProjectReference Include="..\NCoreUtils.Storage\NCoreUtils.Storage.csproj" />
+  </ItemGroup>
+</Project>
